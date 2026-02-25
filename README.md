@@ -1,2 +1,2 @@
 WeatherSphere
-The weather forecast application with day and night theme toggke functionality 
+The weather forecast application with day and night theme toggle functionality 
