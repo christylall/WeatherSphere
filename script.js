@@ -1,175 +1,354 @@
 const API_KEY = "da287b27ab2c62083846949656a915d4";
 
+/* AI API KEY */
+const AI_KEY = "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";
+
 const searchInput = document.getElementById("searchInput");
 const searchBtn = document.getElementById("searchBtn");
-const weatherContainer = document.getElementById("weatherContainer");
 const themeToggle = document.getElementById("themeToggle");
-const locationButtons = document.querySelectorAll(".location-btn");
+const homeSection = document.getElementById("homeSection");
+
+/* WEATHER ICONS */
 
 const weatherSettings = {
-  Clear: { icon: "☀️" },
-  Clouds: { icon: "☁️" },
-  Rain: { icon: "🌧️" },
-  Snow: { icon: "❄️" },
-  Thunderstorm: { icon: "⚡" },
-  Mist: { icon: "🌫️" }
+Clear:"☀️",
+Clouds:"☁️",
+Rain:"🌧️",
+Snow:"❄️",
+Thunderstorm:"⚡",
+Mist:"🌫️",
+Haze:"🌫️",
+Drizzle:"🌦️"
 };
 
-// ✅ AQI FUNCTION
-async function getAQI(lat, lon) {
-  try {
-    const response = await fetch(
-      `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`
-    );
-    const data = await response.json();
-    return data.list[0];
-  } catch {
-    return null;
-  }
+/* GET WEATHER */
+
+async function getWeather(city){
+
+try{
+
+homeSection.innerHTML = `<p class="loading">Loading...</p>`;
+
+const currentRes = await fetch(
+`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
+);
+
+const current = await currentRes.json();
+
+if(current.cod !== 200){
+homeSection.innerHTML = `<p>City not found</p>`;
+return;
 }
 
-async function getWeather(location) {
-  try {
-    weatherContainer.innerHTML = `<p class="loading">Loading...</p>`;
+const forecastRes = await fetch(
+`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`
+);
 
-    const currentResp = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${API_KEY}&units=metric`
-    );
-    const currentData = await currentResp.json();
+const forecast = await forecastRes.json();
 
-    if (currentData.cod !== 200) {
-      weatherContainer.innerHTML = `<p class="error-message">⚠️ Location not found!</p>`;
-      return;
-    }
+const aqiRes = await fetch(
+`https://api.openweathermap.org/data/2.5/air_pollution?lat=${current.coord.lat}&lon=${current.coord.lon}&appid=${API_KEY}`
+);
 
-    const forecastResp = await fetch(
-      `https://api.openweathermap.org/data/2.5/forecast?q=${location}&appid=${API_KEY}&units=metric`
-    );
-    const forecastData = await forecastResp.json();
+const aqiData = await aqiRes.json();
 
-    // ✅ GET AQI
-    const aqiData = await getAQI(
-      currentData.coord.lat,
-      currentData.coord.lon
-    );
+renderData(current,forecast,aqiData);
 
-    displayWeather(currentData, forecastData, aqiData);
+}catch{
 
-  } catch {
-    weatherContainer.innerHTML = `<p class="error-message">❌ Error fetching weather data</p>`;
-  }
+homeSection.innerHTML = `<p>API Error</p>`;
+
 }
 
-function displayWeather(currentData, forecastData, aqiData) {
-  const condition = currentData.weather[0].main;
-  const weatherIcon = weatherSettings[condition]?.icon || "🌡️";
-
-  // ✅ AQI Logic
-  let aqiText = "Unavailable";
-  let remedy = "";
-  let pm25 = "";
-  let pm10 = "";
-
-  if (aqiData) {
-    const aqi = aqiData.main.aqi;
-    pm25 = aqiData.components.pm2_5;
-    pm10 = aqiData.components.pm10;
-
-    if (aqi === 1) {
-      aqiText = "Good 😊";
-      remedy = "Air quality is good. Safe for outdoor activities.";
-    } else if (aqi === 2) {
-      aqiText = "Fair 🙂";
-      remedy = "Sensitive people should limit long exposure.";
-    } else if (aqi === 3) {
-      aqiText = "Moderate 😐";
-      remedy = "Avoid heavy outdoor exercise.";
-    } else if (aqi === 4) {
-      aqiText = "Poor 😷";
-      remedy = "Limit outdoor activities. Wear mask.";
-    } else if (aqi === 5) {
-      aqiText = "Very Poor ☠️";
-      remedy = "Stay indoors. Use N95 mask if going outside.";
-    }
-  }
-
-  let html = `
-  <div class="current-weather">
-    <h2>${currentData.name}, ${currentData.sys.country}</h2>
-    <p><strong>🌡 Temp:</strong> ${currentData.main.temp}°C</p>
-    <p><strong>${condition}:</strong> ${currentData.weather[0].description}</p>
-    <p><strong>💧 Humidity:</strong> ${currentData.main.humidity}%</p>
-    <p><strong>💨 Wind:</strong> ${currentData.wind.speed} m/s</p>
-    <p><strong>🌫 AQI:</strong> ${aqiText}</p>
-    <p><strong>PM2.5:</strong> ${pm25}</p>
-    <p><strong>PM10:</strong> ${pm10}</p>
-    <p><strong>🩺 Advice:</strong> ${remedy}</p>
-    <p class="forecast-icon">${weatherIcon}</p>
-  </div>
-  <h3>5-Day Forecast</h3>
-  <div class="forecast-container-vertical">
-  `;
-
-  const forecastByDate = {};
-  forecastData.list.forEach(item => {
-    const date = item.dt_txt.split(" ")[0];
-    if (!forecastByDate[date]) forecastByDate[date] = [];
-    forecastByDate[date].push(item);
-  });
-
-  Object.keys(forecastByDate).slice(0, 5).forEach(date => {
-    const dayData = forecastByDate[date];
-    const tempAvg = (
-      dayData.reduce((sum, d) => sum + d.main.temp, 0) /
-      dayData.length
-    ).toFixed(1);
-
-    const weatherMain = dayData[0].weather[0].main;
-    const icon = weatherSettings[weatherMain]?.icon || "🌡️";
-
-    const dateStr = new Date(date).toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric"
-    });
-
-    html += `
-    <div class="forecast-card-vertical">
-      <p class="forecast-date">${dateStr}</p>
-      <p class="forecast-temp">🌡 ${tempAvg}°C</p>
-      <p class="forecast-condition">${weatherMain}</p>
-      <p class="forecast-icon">${icon}</p>
-    </div>
-    `;
-  });
-
-  html += `</div>`;
-  weatherContainer.innerHTML = html;
 }
 
-// Search
-searchBtn.addEventListener("click", () => {
-  const loc = searchInput.value.trim();
-  if (loc) getWeather(loc);
+/* RENDER DATA */
+
+function renderData(current,forecast,aqiData){
+
+const icon = weatherSettings[current.weather[0].main] || "🌡️";
+
+const sunrise = new Date(current.sys.sunrise*1000).toLocaleTimeString();
+
+const sunset = new Date(current.sys.sunset*1000).toLocaleTimeString();
+
+const hourlyData = forecast.list.slice(0,8);
+
+const tomorrowData = forecast.list.slice(8,16);
+
+let tomorrowAvg = (tomorrowData.reduce((s,d)=>s+d.main.temp,0)/tomorrowData.length).toFixed(1);
+
+let tomorrowMain = tomorrowData[0].weather[0].main;
+
+const aqiIndex = aqiData.list[0].main.aqi;
+
+const aqiLevels = {
+1:{text:"Good",color:"#4CAF50"},
+2:{text:"Fair",color:"#8BC34A"},
+3:{text:"Moderate",color:"#FFC107"},
+4:{text:"Poor",color:"#FF5722"},
+5:{text:"Very Poor",color:"#F44336"}
+};
+
+const aqiInfo = aqiLevels[aqiIndex];
+
+/* HTML */
+
+homeSection.innerHTML = `
+
+<div id="weatherAnimation"></div>
+
+<div class="swipe-container">
+<div class="swipe-slider" id="swipeSlider">
+
+<div class="swipe-slide">
+
+<div class="current-weather">
+
+<h2>${current.name}, ${current.sys.country}</h2>
+
+<h1>${current.main.temp}°C</h1>
+
+<p>${icon} ${current.weather[0].description}</p>
+
+<p>💧 ${current.main.humidity}% | 💨 ${current.wind.speed} m/s</p>
+
+<p>🌅 ${sunrise}</p>
+
+<p>🌇 ${sunset}</p>
+
+</div>
+
+<div class="aqi-card" style="background:${aqiInfo.color}">
+
+AQI ${aqiIndex} - ${aqiInfo.text}
+
+</div>
+
+<h3>Hourly Forecast</h3>
+
+<div class="hourly-slider">
+
+${hourlyData.map(hour=>{
+
+const time = new Date(hour.dt_txt).getHours();
+
+const icon = weatherSettings[hour.weather[0].main] || "🌡️";
+
+return `
+<div class="hour-card">
+<p>${time}:00</p>
+<p>${icon}</p>
+<p>${hour.main.temp}°C</p>
+</div>
+`;
+
+}).join("")}
+
+</div>
+
+</div>
+
+<div class="swipe-slide">
+
+<div class="current-weather">
+
+<h2>Tomorrow</h2>
+
+<h1>${tomorrowAvg}°C</h1>
+
+<p>${weatherSettings[tomorrowMain]} ${tomorrowMain}</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="ai-chat">
+
+<h3>🤖 WeatherSphere AI</h3>
+
+<input id="aiInput" placeholder="Ask anything...">
+
+<button onclick="askAI()">Ask AI</button>
+
+<p id="aiOutput"></p>
+
+</div>
+
+`;
+
+initSwipe();
+
+/* BACKGROUND ANIMATION */
+
+setWeatherAnimation(current.weather[0].main);
+
+}
+
+/* SWIPE */
+
+function initSwipe(){
+
+const slider=document.getElementById("swipeSlider");
+
+let startX=0;
+let currentIndex=0;
+
+slider.addEventListener("touchstart",e=>{
+startX=e.touches[0].clientX
 });
 
-// Default city buttons
-locationButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-    getWeather(btn.getAttribute("data-location"));
-  });
+slider.addEventListener("touchend",e=>{
+
+let endX=e.changedTouches[0].clientX;
+
+if(startX-endX>50 && currentIndex<1) currentIndex++;
+
+if(endX-startX>50 && currentIndex>0) currentIndex--;
+
+slider.style.transform=`translateX(-${currentIndex*100}%)`
+
 });
 
-// Dark mode toggle
-themeToggle.addEventListener("click", () => {
-  document.body.classList.toggle("dark-mode");
-  themeToggle.textContent =
-    document.body.classList.contains("dark-mode")
-      ? "Day Theme"
-      : "Night Theme";
+}
+
+/* WEATHER ANIMATION */
+
+function setWeatherAnimation(weather){
+
+const container=document.getElementById("weatherAnimation");
+
+container.innerHTML="";
+
+if(weather==="Rain"||weather==="Drizzle"){
+
+for(let i=0;i<100;i++){
+
+const drop=document.createElement("div");
+
+drop.className="rain-drop";
+
+drop.style.left=Math.random()*100+"%";
+
+container.appendChild(drop);
+
+}
+
+}
+
+else if(weather==="Clear"){
+
+const sun=document.createElement("div");
+
+sun.className="sun";
+
+container.appendChild(sun);
+
+}
+
+else if(weather==="Clouds"){
+
+for(let i=0;i<3;i++){
+
+const cloud=document.createElement("div");
+
+cloud.className="cloud";
+
+cloud.style.top=(40+Math.random()*120)+"px";
+
+container.appendChild(cloud);
+
+}
+
+}
+
+else if(weather==="Snow"){
+
+for(let i=0;i<80;i++){
+
+const snow=document.createElement("div");
+
+snow.className="snow";
+
+snow.style.left=Math.random()*100+"%";
+
+container.appendChild(snow);
+
+}
+
+}
+
+else if(weather==="Thunderstorm"){
+
+const flash=document.createElement("div");
+
+flash.className="lightning";
+
+container.appendChild(flash);
+
+}
+
+}
+
+/* AI */
+
+async function askAI(){
+
+const question=document.getElementById("aiInput").value;
+
+document.getElementById("aiOutput").innerText="Thinking...";
+
+try{
+
+const response=await fetch("https://openrouter.ai/api/v1/chat/completions",{
+
+method:"POST",
+
+headers:{
+"Authorization":"Bearer "+AI_KEY,
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+model:"openai/gpt-3.5-turbo",
+messages:[{role:"user",content:question}]
+})
+
 });
 
-// Default location
-window.addEventListener("load", () => {
-  getWeather("Delhi");
+const data=await response.json();
+
+document.getElementById("aiOutput").innerText=data.choices[0].message.content;
+
+}catch{
+
+document.getElementById("aiOutput").innerText="AI unavailable";
+
+}
+
+}
+
+/* SEARCH */
+
+searchBtn.addEventListener("click",()=>{
+
+if(searchInput.value.trim())
+getWeather(searchInput.value.trim())
+
+});
+
+/* DARK MODE */
+
+themeToggle.addEventListener("click",()=>{
+document.body.classList.toggle("dark-mode")
+});
+
+/* DEFAULT */
+
+window.addEventListener("load",()=>{
+getWeather("Delhi")
 });
