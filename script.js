@@ -1,7 +1,7 @@
 const API_KEY = "da287b27ab2c62083846949656a915d4";
 
 /* AI API KEY */
-const AI_KEY = "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";
+const AI_KEY = " ";
 
 const searchInput = document.getElementById("searchInput");
 const searchBtn = document.getElementById("searchBtn");
