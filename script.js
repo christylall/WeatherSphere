@@ -36,7 +36,7 @@ try{
 homeSection.innerHTML="Loading...";
 
 const currentRes = await fetch(
-"https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric"
+`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
 );
 
 const current = await currentRes.json();
@@ -47,7 +47,7 @@ return;
 }
 
 const forecastRes = await fetch(
-"https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric"
+`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`
 );
 
 const forecast = await forecastRes.json();
@@ -80,18 +80,40 @@ const fiveDays=Object.keys(daily).slice(1,6);
 
 homeSection.innerHTML=`
 
-<div id="weatherAnimation"></div><div class="current-weather"><h2>${current.name}, ${current.sys.country}</h2><h1>${current.main.temp}°C</h1><p>${icon} ${current.weather[0].description}</p><p>💧 ${current.main.humidity}%</p><p>💨 ${current.wind.speed} m/s</p></div><h3>5 Day Forecast</h3><div class="forecast-cards">${fiveDays.map(day=>{
+<div id="weatherAnimation"></div>
+
+<div class="current-weather">
+<h2>${current.name}, ${current.sys.country}</h2>
+<h1>${current.main.temp}°C</h1>
+<p>${icon} ${current.weather[0].description}</p>
+<p>💧 ${current.main.humidity}%</p>
+<p>💨 ${current.wind.speed} m/s</p>
+</div>
+
+<h3>5 Day Forecast</h3>
+
+<div class="forecast-cards">
+
+${fiveDays.map(day=>{
 
 const avg=(daily[day].reduce((s,d)=>s+d.main.temp,0)/daily[day].length).toFixed(1);
 const main=daily[day][0].weather[0].main;
 
 return`
 
-<div class="forecast-card"><p>${day}</p><p>${weatherSettings[main]}</p><p>${avg}°C</p></div>`;
+<div class="forecast-card">
+<p>${day}</p>
+<p>${weatherSettings[main]}</p>
+<p>${avg}°C</p>
+</div>
+
+`;
 
 }).join("")}
 
-</div>`;
+</div>
+
+`;
 
 setWeatherAnimation(current.weather[0].main);
 
@@ -144,9 +166,7 @@ container.appendChild(cloud);
 /* AI INPUT */
 
 function fillQuestion(q){
-
 document.getElementById("aiInput").value=q;
-
 }
 
 /* AI ANSWER */
@@ -176,15 +196,11 @@ else answer="Wear cotton clothes.";
 }
 
 if(q.includes("crop")){
-
-answer="Rice, wheat and vegetables grow well depending on rainfall.";
-
+answer="Rice, wheat, maize and vegetables can grow depending on rainfall and soil.";
 }
 
 if(q.includes("disease")){
-
-answer="Flu or dehydration can occur in certain weather.";
-
+answer="Cold, flu, dehydration or heatstroke may occur depending on weather.";
 }
 
 document.getElementById("aiOutput").innerText=answer;
@@ -196,7 +212,6 @@ document.getElementById("aiOutput").innerText=answer;
 searchBtn.addEventListener("click",()=>{
 
 if(searchInput.value.trim())
-
 getWeather(searchInput.value.trim());
 
 });
@@ -204,9 +219,7 @@ getWeather(searchInput.value.trim());
 /* DARK MODE */
 
 themeToggle.addEventListener("click",()=>{
-
 document.body.classList.toggle("dark-mode");
-
 });
 
 /* AUTO LOCATION */
@@ -221,13 +234,13 @@ const lat=pos.coords.latitude;
 const lon=pos.coords.longitude;
 
 const res=await fetch(
-"https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric"
+`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
 );
 
 const data=await res.json();
 
 const forecastRes=await fetch(
-"https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric"
+`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
 );
 
 const forecast=await forecastRes.json();
