@@ -80,8 +80,6 @@ const fiveDays=Object.keys(daily).slice(1,6);
 
 homeSection.innerHTML=`
 
-<div id="weatherAnimation"></div>
-
 <div class="current-weather">
 <h2>${current.name}, ${current.sys.country}</h2>
 <h1>${current.main.temp}°C</h1>
@@ -115,52 +113,6 @@ return`
 
 `;
 
-setWeatherAnimation(current.weather[0].main);
-
-}
-
-/* WEATHER ANIMATION */
-
-function setWeatherAnimation(weather){
-
-const container=document.getElementById("weatherAnimation");
-
-container.innerHTML="";
-
-if(weather==="Rain"||weather==="Drizzle"){
-
-for(let i=0;i<80;i++){
-
-const drop=document.createElement("div");
-drop.className="rain-drop";
-drop.style.left=Math.random()*100+"%";
-container.appendChild(drop);
-
-}
-
-}
-
-else if(weather==="Clear"){
-
-const sun=document.createElement("div");
-sun.className="sun";
-container.appendChild(sun);
-
-}
-
-else if(weather==="Clouds"){
-
-for(let i=0;i<3;i++){
-
-const cloud=document.createElement("div");
-cloud.className="cloud";
-cloud.style.top=(40+Math.random()*120)+"px";
-container.appendChild(cloud);
-
-}
-
-}
-
 }
 
 /* AI INPUT */
@@ -184,7 +136,7 @@ answer="Current temperature is "+temp;
 
 }
 
-if(q.includes("wear")){
+else if(q.includes("wear")){
 
 const temp=parseInt(document.querySelector(".current-weather h1").innerText);
 
@@ -195,12 +147,12 @@ else answer="Wear cotton clothes.";
 
 }
 
-if(q.includes("crop")){
-answer="Rice, wheat, maize and vegetables can grow depending on rainfall and soil.";
+else if(q.includes("crop")){
+answer="Rice, wheat and vegetables grow well depending on rainfall.";
 }
 
-if(q.includes("disease")){
-answer="Cold, flu, dehydration or heatstroke may occur depending on weather.";
+else if(q.includes("disease")){
+answer="Flu or dehydration can occur depending on weather.";
 }
 
 document.getElementById("aiOutput").innerText=answer;
@@ -210,10 +162,9 @@ document.getElementById("aiOutput").innerText=answer;
 /* SEARCH */
 
 searchBtn.addEventListener("click",()=>{
-
-if(searchInput.value.trim())
+if(searchInput.value.trim()){
 getWeather(searchInput.value.trim());
-
+}
 });
 
 /* DARK MODE */
