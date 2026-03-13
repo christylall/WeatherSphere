@@ -8,11 +8,12 @@
 </head>
 
 <body>
+
 <div class="container">
 
 <header class="header">
   <h1 class="app-title">WeatherSphere</h1>
-  <button id="themeToggle" classa="theme-toggle">Night Theme</button>
+  <button id="themeToggle" class="theme-toggle">Night Theme</button>
 </header>
 
 <section class="search-section">
@@ -27,13 +28,55 @@
   <button class="location-btn" data-location="Chennai">Chennai</button>
 </section>
 
+<!-- Weather Output -->
 <section id="homeSection"></section>
+
+<!-- AI Chat Section -->
+<section class="ai-chat">
+
+<h3>🤖 WeatherSphere AI</h3>
+
+<div class="suggestions">
+
+<p>Try asking:</p>
+
+<button onclick="fillQuestion('What is the temperature here?')">
+Temperature Here
+</button>
+
+<button onclick="fillQuestion('What is the temperature in Agra?')">
+Agra Temperature
+</button>
+
+<button onclick="fillQuestion('What should I wear in this weather?')">
+Dress Suggestion
+</button>
+
+<button onclick="fillQuestion('Which crop grows best in this weather?')">
+Best Crop
+</button>
+
+<button onclick="fillQuestion('What disease can occur in this weather?')">
+Disease Risk
+</button>
+
+</div>
+
+<input id="aiInput" placeholder="Ask weather related question...">
+
+<button onclick="askAI()">Ask AI</button>
+
+<p id="aiOutput"></p>
+
+</section>
 
 <footer>
   <p>WeatherSphere © 2025 | Developed by Christy Lall</p>
 </footer>
 
 </div>
+
 <script src="script.js"></script>
+
 </body>
 </html>
