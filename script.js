@@ -5,7 +5,7 @@ const searchBtn = document.getElementById("searchBtn");
 const themeToggle = document.getElementById("themeToggle");
 const homeSection = document.getElementById("homeSection");
 
-/* DEFAULT CITY BUTTONS */
+/* CITY BUTTONS */
 
 document.querySelectorAll(".location-btn").forEach(btn=>{
 btn.addEventListener("click",()=>{
@@ -27,7 +27,7 @@ Haze:"🌫️",
 Drizzle:"🌦️"
 };
 
-/* WEATHER FETCH */
+/* FETCH WEATHER */
 
 async function getWeather(city){
 
@@ -76,7 +76,10 @@ if(!daily[date]) daily[date]=[];
 daily[date].push(item);
 });
 
-const fiveDays=Object.keys(daily).slice(1,6);
+const days=Object.keys(daily);
+const tomorrow=days[1];
+const fiveDays=days.slice(1,6);
+const hourly=forecast.list.slice(0,8);
 
 homeSection.innerHTML=`
 
@@ -88,6 +91,66 @@ homeSection.innerHTML=`
 <p>💨 ${current.wind.speed} m/s</p>
 </div>
 
+<div class="swipe-container">
+
+<div class="swipe-slider" id="swipeSlider">
+
+<!-- HOURLY -->
+
+<div class="swipe-slide">
+
+<h3>Hourly Forecast</h3>
+
+<div class="hourly-cards">
+
+${hourly.map(h=>{
+
+const time=h.dt_txt.split(" ")[1].slice(0,5);
+const temp=h.main.temp.toFixed(1);
+const main=h.weather[0].main;
+
+return`
+<div class="hour-card">
+<p>${time}</p>
+<p>${weatherSettings[main]}</p>
+<p>${temp}°C</p>
+</div>
+`;
+
+}).join("")}
+
+</div>
+
+</div>
+
+<!-- TOMORROW -->
+
+<div class="swipe-slide">
+
+<h3>Tomorrow</h3>
+
+<div class="tomorrow-box">
+
+${daily[tomorrow].map(t=>{
+
+const time=t.dt_txt.split(" ")[1].slice(0,5);
+const temp=t.main.temp.toFixed(1);
+const main=t.weather[0].main;
+
+return`
+<p>${time} ${weatherSettings[main]} ${temp}°C</p>
+`;
+
+}).join("")}
+
+</div>
+
+</div>
+
+<!-- FIVE DAYS -->
+
+<div class="swipe-slide">
+
 <h3>5 Day Forecast</h3>
 
 <div class="forecast-cards">
@@ -97,21 +160,55 @@ ${fiveDays.map(day=>{
 const avg=(daily[day].reduce((s,d)=>s+d.main.temp,0)/daily[day].length).toFixed(1);
 const main=daily[day][0].weather[0].main;
 
-return`
+const dayName = new Date(day).toLocaleDateString("en-US",{weekday:"short"});
 
+return`
 <div class="forecast-card">
-<p>${day}</p>
+<p>${dayName}</p>
 <p>${weatherSettings[main]}</p>
 <p>${avg}°C</p>
 </div>
-
 `;
 
 }).join("")}
 
 </div>
 
+</div>
+
+</div>
+
+</div>
+
 `;
+
+initSwipe();
+
+}
+
+/* SWIPE */
+
+function initSwipe(){
+
+const slider=document.getElementById("swipeSlider");
+
+let startX=0;
+let index=0;
+
+slider.addEventListener("touchstart",e=>{
+startX=e.touches[0].clientX;
+});
+
+slider.addEventListener("touchend",e=>{
+
+const diff=startX-e.changedTouches[0].clientX;
+
+if(diff>50 && index<2) index++;
+if(diff<-50 && index>0) index--;
+
+slider.style.transform=`translateX(-${index*100}%)`;
+
+});
 
 }
 
@@ -125,22 +222,26 @@ document.getElementById("aiInput").value=q;
 
 function askAI(){
 
+const tempElement=document.querySelector(".current-weather h1");
+
+if(!tempElement){
+document.getElementById("aiOutput").innerText="Load weather first.";
+return;
+}
+
+const temp=parseInt(tempElement.innerText);
+
 const q=document.getElementById("aiInput").value.toLowerCase();
 
-let answer="I cannot answer that yet.";
+let answer="I cannot answer that.";
 
 if(q.includes("temperature")){
-
-const temp=document.querySelector(".current-weather h1").innerText;
-answer="Current temperature is "+temp;
-
+answer="Current temperature is "+temp+"°C";
 }
 
 else if(q.includes("wear")){
 
-const temp=parseInt(document.querySelector(".current-weather h1").innerText);
-
-if(temp<10) answer="Wear warm jacket.";
+if(temp<10) answer="Wear a warm jacket.";
 else if(temp<20) answer="Light jacket recommended.";
 else if(temp<30) answer="Normal clothes are fine.";
 else answer="Wear cotton clothes.";
@@ -148,7 +249,7 @@ else answer="Wear cotton clothes.";
 }
 
 else if(q.includes("crop")){
-answer="Rice, wheat and vegetables grow well depending on rainfall.";
+answer="Rice, wheat and vegetables grow well in this weather.";
 }
 
 else if(q.includes("disease")){
