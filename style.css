@@ -135,55 +135,79 @@ min-width:100%;
 padding:10px;
 }
 
-/* HOURLY */
+/* HOURLY FORECAST */
 
 .hourly-cards{
 display:flex;
 overflow-x:auto;
-gap:12px;
-padding:10px 0;
+gap:10px;
+padding:10px 5px;
+scrollbar-width:none;
+}
+
+.hourly-cards::-webkit-scrollbar{
+display:none;
 }
 
 .hour-card{
-min-width:80px;
+min-width:70px;
+max-width:70px;
+background:var(--card-bg);
+padding:8px;
+border-radius:10px;
+text-align:center;
+color:white;
+box-shadow:var(--box-shadow);
+font-size:13px;
+display:flex;
+flex-direction:column;
+gap:3px;
+}
+
+/* TOMORROW FORECAST */
+
+.tomorrow-box{
+display:flex;
+flex-direction:column;
+gap:10px;
+margin-top:10px;
+}
+
+.tomorrow-box p{
+background:var(--card-bg);
+padding:10px;
+border-radius:10px;
+color:white;
+box-shadow:var(--box-shadow);
+display:flex;
+justify-content:space-between;
+}
+
+/* FIVE DAY FORECAST */
+
+.forecast-cards{
+display:flex;
+gap:12px;
+overflow-x:auto;
+padding:10px 5px;
+scrollbar-width:none;
+}
+
+.forecast-cards::-webkit-scrollbar{
+display:none;
+}
+
+.forecast-card{
+min-width:85px;
 background:var(--card-bg);
 padding:10px;
 border-radius:10px;
 text-align:center;
 color:white;
 box-shadow:var(--box-shadow);
-}
-
-/* TOMORROW */
-
-.tomorrow-box{
-background:var(--card-bg);
-border-radius:var(--border-radius);
-padding:15px;
-color:white;
 display:flex;
 flex-direction:column;
-gap:6px;
-box-shadow:var(--box-shadow);
-}
-
-/* FIVE DAY */
-
-.forecast-cards{
-display:flex;
-gap:12px;
-overflow-x:auto;
-padding:10px 0;
-}
-
-.forecast-card{
-background:var(--card-bg);
-padding:12px;
-border-radius:var(--border-radius);
-text-align:center;
-color:white;
-min-width:90px;
-box-shadow:var(--box-shadow);
+gap:4px;
 }
 
 /* AI CHAT */
