@@ -360,22 +360,47 @@ pointer-events:none;
 
 .cloud{
 position:absolute;
-width:120px;
+width:140px;
 height:60px;
 background:white;
-border-radius:50px;
-opacity:0.7;
+border-radius:60px;
+opacity:0.8;
+filter:blur(1px);
 animation:cloudMove linear infinite;
+}
+
+/* cloud bumps */
+
+.cloud::before,
+.cloud::after{
+content:"";
+position:absolute;
+background:white;
+border-radius:50%;
+}
+
+.cloud::before{
+width:60px;
+height:60px;
+top:-20px;
+left:20px;
+}
+
+.cloud::after{
+width:80px;
+height:80px;
+top:-35px;
+left:50px;
 }
 
 @keyframes cloudMove{
 
 0%{
-transform:translateX(-150px);
+transform:translateX(-200px);
 }
 
 100%{
-transform:translateX(110vw);
+transform:translateX(120vw);
 }
 
 }
@@ -387,8 +412,9 @@ transform:translateX(110vw);
 position:absolute;
 top:-20px;
 width:2px;
-height:15px;
-background:#6ec6ff;
+height:18px;
+background:#7ec8ff;
+opacity:0.8;
 animation:rainFall linear infinite;
 }
 
@@ -399,7 +425,7 @@ transform:translateY(0);
 }
 
 100%{
-transform:translateY(110vh);
+transform:translateY(120vh);
 }
 
 }
@@ -413,8 +439,9 @@ top:60px;
 right:80px;
 width:90px;
 height:90px;
-background:gold;
+background:radial-gradient(circle,#ffd54f,#ffb300);
 border-radius:50%;
+box-shadow:0 0 60px rgba(255,200,0,0.8);
 }
 
 
@@ -424,10 +451,10 @@ border-radius:50%;
 position:absolute;
 top:40px;
 right:60px;
-width:130px;
-height:130px;
+width:140px;
+height:140px;
 border-radius:50%;
-box-shadow:0 0 60px gold;
+box-shadow:0 0 80px rgba(255,200,0,0.6);
 animation:sunPulse 4s infinite;
 }
 
@@ -435,14 +462,17 @@ animation:sunPulse 4s infinite;
 
 0%{
 transform:scale(1);
+opacity:0.8;
 }
 
 50%{
-transform:scale(1.1);
+transform:scale(1.15);
+opacity:1;
 }
 
 100%{
 transform:scale(1);
+opacity:0.8;
 }
 
 }
