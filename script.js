@@ -20,6 +20,8 @@ Drizzle:"🌦️"
 
 async function getAQI(lat,lon){
 
+try{
+
 const res=await fetch(
 `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`
 )
@@ -27,6 +29,12 @@ const res=await fetch(
 const data=await res.json()
 
 return data.list[0].main.aqi
+
+}catch{
+
+return "--"
+
+}
 
 }
 
@@ -36,11 +44,18 @@ async function getWeather(city){
 
 homeSection.innerHTML="Loading Weather..."
 
+try{
+
 const currentRes=await fetch(
 `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
 )
 
 const current=await currentRes.json()
+
+if(current.cod!==200){
+homeSection.innerHTML="City not found"
+return
+}
 
 const forecastRes=await fetch(
 `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`
@@ -49,6 +64,12 @@ const forecastRes=await fetch(
 const forecast=await forecastRes.json()
 
 renderWeather(current,forecast)
+
+}catch{
+
+homeSection.innerHTML="Weather API Error"
+
+}
 
 }
 
@@ -126,17 +147,13 @@ homeSection.innerHTML=`
 </div>
 
 <div class="aqi-card">
-
 <h3>Air Quality</h3>
 <p>${aqi}</p>
-
 </div>
 
 <div class="prevention-card">
-
 <h3>Health Advice</h3>
 <p>${advice}</p>
-
 </div>
 
 <div class="swipe-container">
@@ -158,13 +175,9 @@ const main=h.weather[0].main
 return`
 
 <div class="hour-card">
-
 <p>${time}</p>
-
 <p>${weatherIcons[main]}</p>
-
 <p>${temp}°C</p>
-
 </div>
 
 `
@@ -212,13 +225,9 @@ const name=new Date(day).toLocaleDateString("en-US",{weekday:"short"})
 return`
 
 <div class="forecast-card">
-
 <p>${name}</p>
-
 <p>${weatherIcons[main]}</p>
-
 <p>${avg}°C</p>
-
 </div>
 
 `
@@ -249,20 +258,26 @@ if(!box) return
 
 box.innerHTML=""
 
-if(type==="Rain"){
+/* RAIN */
 
-for(let i=0;i<40;i++){
+if(type==="Rain" || type==="Drizzle"){
+
+for(let i=0;i<60;i++){
 
 const drop=document.createElement("div")
 
 drop.className="rain-drop"
+
 drop.style.left=Math.random()*100+"%"
+drop.style.animationDuration=(0.5+Math.random())+"s"
 
 box.appendChild(drop)
 
 }
 
 }
+
+/* CLEAR */
 
 else if(type==="Clear"){
 
@@ -272,11 +287,40 @@ box.appendChild(sun)
 
 }
 
+/* CLOUDS */
+
 else if(type==="Clouds"){
 
+for(let i=0;i<4;i++){
+
 const cloud=document.createElement("div")
+
 cloud.className="cloud"
+
+cloud.style.top=(10+i*15)+"%"
+cloud.style.animationDuration=(20+i*5)+"s"
+
 box.appendChild(cloud)
+
+}
+
+}
+
+/* SNOW */
+
+else if(type==="Snow"){
+
+for(let i=0;i<40;i++){
+
+const snow=document.createElement("div")
+
+snow.className="snow"
+
+snow.style.left=Math.random()*100+"%"
+
+box.appendChild(snow)
+
+}
 
 }
 
