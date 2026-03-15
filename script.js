@@ -112,8 +112,8 @@ async function renderWeather(current, forecast) {
         <p>Feels Like ${current.main.feels_like.toFixed(1)}°C</p>
         <p>Humidity ${current.main.humidity}%</p>
         <p>Wind ${current.wind.speed} m/s</p>
-        <p>Sunrise ${sunrise}</p>
-        <p>Sunset ${sunset}</p>
+        <p>🌄Sunrise ${sunrise}</p>
+        <p>🌇Sunset ${sunset}</p>
     </div>
 
     <div class="aqi-card">
