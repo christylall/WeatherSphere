@@ -5,8 +5,6 @@ const searchBtn=document.getElementById("searchBtn")
 const searchInput=document.getElementById("searchInput")
 const themeToggle=document.getElementById("themeToggle")
 
-/* STORE WEATHER FOR AI */
-
 let currentWeather=""
 let currentTemp=0
 
@@ -76,7 +74,7 @@ const forecastRes=await fetch(
 
 const forecast=await forecastRes.json()
 
-renderWeather(current,forecast)
+renderWeather(current)
 
 }catch{
 
@@ -100,13 +98,7 @@ const currentRes=await fetch(
 
 const current=await currentRes.json()
 
-const forecastRes=await fetch(
-`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
-)
-
-const forecast=await forecastRes.json()
-
-renderWeather(current,forecast)
+renderWeather(current)
 
 }catch{
 
@@ -118,7 +110,7 @@ homeSection.innerHTML="Location weather error"
 
 /* RENDER WEATHER */
 
-async function renderWeather(current,forecast){
+async function renderWeather(current){
 
 const weatherMain=current.weather[0].main
 currentWeather=weatherMain
@@ -145,8 +137,6 @@ if(weatherMain==="Clouds") advice="Light jacket recommended"
 if(aqi>=4) advice="Avoid outdoor activities"
 
 homeSection.innerHTML=`
-
-<div id="weatherAnimation"></div>
 
 <div class="current-weather">
 
@@ -200,7 +190,6 @@ if(type==="Rain"||type==="Drizzle"){
 for(let i=0;i<80;i++){
 
 const drop=document.createElement("div")
-
 drop.className="rain-drop"
 
 drop.style.left=Math.random()*100+"%"
@@ -227,14 +216,13 @@ box.appendChild(rays)
 
 }
 
-/* MOVING CLOUDS */
+/* CLOUDS */
 
 else if(type==="Clouds"){
 
 for(let i=0;i<5;i++){
 
 const cloud=document.createElement("div")
-
 cloud.className="cloud"
 
 cloud.style.top=(10+i*15)+"%"
@@ -258,6 +246,14 @@ if(city) getWeather(city)
 
 })
 
+/* ENTER KEY SEARCH */
+
+searchInput.addEventListener("keypress",e=>{
+if(e.key==="Enter"){
+searchBtn.click()
+}
+})
+
 /* DARK MODE */
 
 themeToggle.addEventListener("click",()=>{
@@ -275,7 +271,7 @@ function askAI(){
 const q=document.getElementById("aiInput").value.toLowerCase()
 const out=document.getElementById("aiOutput")
 
-let ans="Ask about clothes, crops or disease."
+let ans="Try asking: temperature, what to wear, crop or disease."
 
 if(q.includes("temperature")){
 ans=`Current temperature is ${currentTemp.toFixed(1)}°C`
