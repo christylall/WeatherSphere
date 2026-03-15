@@ -68,6 +68,49 @@ Detecting your location...
 </section>
 
 
+<!-- WEATHER AI -->
+
+<section class="ai-chat">
+
+<h3>🤖 Weather AI Assistant</h3>
+
+<div class="suggestions">
+
+<p>Try asking:</p>
+
+<button onclick="fillQuestion('What is the temperature here?')">
+Temperature
+</button>
+
+<button onclick="fillQuestion('What should I wear in this weather?')">
+What to Wear
+</button>
+
+<button onclick="fillQuestion('Which crop grows best in this weather?')">
+Best Crop
+</button>
+
+<button onclick="fillQuestion('What disease can occur in this weather?')">
+Disease Risk
+</button>
+
+</div>
+
+<input 
+id="aiInput" 
+class="ai-input"
+placeholder="Ask weather related question..."
+>
+
+<button onclick="askAI()" class="ai-btn">
+Ask
+</button>
+
+<p id="aiOutput" class="ai-output"></p>
+
+</section>
+
+
 <footer>
 
 <p>
@@ -76,10 +119,13 @@ WeatherSphere © 2025 | Developed by Christy Lall
 
 </footer>
 
-
 </div>
 
+
 <script src="script.js"></script>
+
+
+<!-- ENTER KEY SEARCH -->
 
 <script>
 
