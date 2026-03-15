@@ -5,12 +5,16 @@ const searchBtn=document.getElementById("searchBtn")
 const searchInput=document.getElementById("searchInput")
 const themeToggle=document.getElementById("themeToggle")
 
+/* STORE WEATHER FOR AI */
+
+let currentWeather=""
+let currentTemp=0
+
 /* QUICK CITY BUTTONS */
 
 document.querySelectorAll(".location-btn").forEach(btn=>{
 btn.addEventListener("click",()=>{
-const city=btn.dataset.location
-getWeather(city)
+getWeather(btn.dataset.location)
 })
 })
 
@@ -117,6 +121,9 @@ homeSection.innerHTML="Location weather error"
 async function renderWeather(current,forecast){
 
 const weatherMain=current.weather[0].main
+currentWeather=weatherMain
+currentTemp=current.main.temp
+
 const icon=weatherIcons[weatherMain]||"🌡️"
 
 const lat=current.coord.lat
@@ -130,32 +137,12 @@ const sunrise=new Date(current.sys.sunrise*1000)
 const sunset=new Date(current.sys.sunset*1000)
 .toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})
 
-const hourly=forecast.list.slice(0,8)
-
-/* DAILY GROUP */
-
-const daily={}
-
-forecast.list.forEach(item=>{
-const date=item.dt_txt.split(" ")[0]
-if(!daily[date]) daily[date]=[]
-daily[date].push(item)
-})
-
-const days=Object.keys(daily)
-const tomorrow=days[1]
-const fiveDays=days.slice(1,6)
-
-/* HEALTH ADVICE */
-
 let advice="Stay hydrated"
 
 if(weatherMain==="Rain") advice="Carry umbrella ☔"
 if(weatherMain==="Clear") advice="Wear sunglasses 😎"
 if(weatherMain==="Clouds") advice="Light jacket recommended"
 if(aqi>=4) advice="Avoid outdoor activities"
-
-/* UI */
 
 homeSection.innerHTML=`
 
@@ -165,7 +152,7 @@ homeSection.innerHTML=`
 
 <h2>${current.name}, ${current.sys.country}</h2>
 
-<h1>${current.main.temp.toFixed(1)}°C</h1>
+<h1>${currentTemp.toFixed(1)}°C</h1>
 
 <p>${icon} ${current.weather[0].description}</p>
 
@@ -208,15 +195,16 @@ box.innerHTML=""
 
 /* RAIN */
 
-if(type==="Rain" || type==="Drizzle"){
+if(type==="Rain"||type==="Drizzle"){
 
-for(let i=0;i<60;i++){
+for(let i=0;i<80;i++){
 
 const drop=document.createElement("div")
+
 drop.className="rain-drop"
 
 drop.style.left=Math.random()*100+"%"
-drop.style.animationDuration=(0.5+Math.random())+"s"
+drop.style.animationDuration=(0.6+Math.random())+"s"
 
 box.appendChild(drop)
 
@@ -224,29 +212,33 @@ box.appendChild(drop)
 
 }
 
-/* CLEAR */
+/* SUNNY */
 
 else if(type==="Clear"){
 
 const sun=document.createElement("div")
 sun.className="sun"
 
+const rays=document.createElement("div")
+rays.className="sun-rays"
+
 box.appendChild(sun)
+box.appendChild(rays)
 
 }
 
-/* CLOUDS */
+/* MOVING CLOUDS */
 
 else if(type==="Clouds"){
 
-for(let i=0;i<4;i++){
+for(let i=0;i<5;i++){
 
 const cloud=document.createElement("div")
 
 cloud.className="cloud"
 
 cloud.style.top=(10+i*15)+"%"
-cloud.style.animationDuration=(20+i*5)+"s"
+cloud.style.animationDuration=(25+i*5)+"s"
 
 box.appendChild(cloud)
 
@@ -272,7 +264,7 @@ themeToggle.addEventListener("click",()=>{
 document.body.classList.toggle("dark-mode")
 })
 
-/* AI FUNCTIONS */
+/* AI */
 
 function fillQuestion(q){
 document.getElementById("aiInput").value=q
@@ -280,28 +272,68 @@ document.getElementById("aiInput").value=q
 
 function askAI(){
 
-const question=document.getElementById("aiInput").value.toLowerCase()
-const output=document.getElementById("aiOutput")
+const q=document.getElementById("aiInput").value.toLowerCase()
+const out=document.getElementById("aiOutput")
 
-let answer="Try asking about weather, clothes or crops."
+let ans="Ask about clothes, crops or disease."
 
-if(question.includes("wear")){
-answer="Wear light clothes in heat, jackets in cold, and carry umbrella during rain."
+if(q.includes("temperature")){
+ans=`Current temperature is ${currentTemp.toFixed(1)}°C`
 }
 
-else if(question.includes("crop")){
-answer="Rice grows well in rain, wheat in cool weather and maize in warm climate."
+else if(q.includes("wear")){
+
+if(currentWeather==="Rain"){
+ans="It is raining. Wear waterproof shoes and carry umbrella ☔"
 }
 
-else if(question.includes("disease")){
-answer="Rainy weather increases mosquito diseases like dengue."
+else if(currentTemp>32){
+ans="Weather is hot. Wear light cotton clothes ☀️"
 }
 
-else if(question.includes("temperature")){
-answer="The temperature is shown in the weather section above."
+else if(currentTemp<15){
+ans="Weather is cold. Wear warm jacket 🧥"
 }
 
-output.innerText=answer
+else{
+ans="Comfortable casual clothes are suitable."
+}
+
+}
+
+else if(q.includes("crop")){
+
+if(currentWeather==="Rain"){
+ans="Rainy weather supports rice and sugarcane 🌾"
+}
+
+else if(currentTemp>30){
+ans="Warm weather is good for maize and cotton 🌽"
+}
+
+else{
+ans="Wheat grows well in this climate."
+}
+
+}
+
+else if(q.includes("disease")){
+
+if(currentWeather==="Rain"){
+ans="Mosquito diseases like dengue may increase 🦟"
+}
+
+else if(currentTemp>35){
+ans="Risk of heatstroke and dehydration."
+}
+
+else{
+ans="Normal seasonal infections may occur."
+}
+
+}
+
+out.innerText=ans
 
 }
 
@@ -313,10 +345,10 @@ if(navigator.geolocation){
 
 navigator.geolocation.getCurrentPosition(pos=>{
 
-const lat=pos.coords.latitude
-const lon=pos.coords.longitude
-
-getWeatherByLocation(lat,lon)
+getWeatherByLocation(
+pos.coords.latitude,
+pos.coords.longitude
+)
 
 },()=>{
 
