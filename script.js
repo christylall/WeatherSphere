@@ -5,18 +5,9 @@ const searchBtn = document.getElementById("searchBtn");
 const themeToggle = document.getElementById("themeToggle");
 const homeSection = document.getElementById("homeSection");
 
-/* CITY BUTTONS */
-
-document.querySelectorAll(".location-btn").forEach(btn=>{
-btn.addEventListener("click",()=>{
-const city = btn.dataset.location;
-getWeather(city);
-});
-});
-
 /* WEATHER ICONS */
 
-const weatherSettings={
+const weatherIcons = {
 Clear:"☀️",
 Clouds:"☁️",
 Rain:"🌧️",
@@ -27,7 +18,7 @@ Haze:"🌫️",
 Drizzle:"🌦️"
 };
 
-/* AQI FETCH */
+/* AQI */
 
 async function getAQI(lat,lon){
 
@@ -41,13 +32,13 @@ return data.list[0].main.aqi;
 
 }
 
-/* FETCH WEATHER */
+/* GET WEATHER */
 
 async function getWeather(city){
 
-try{
+homeSection.innerHTML="Loading Weather...";
 
-homeSection.innerHTML="Loading...";
+try{
 
 const currentRes = await fetch(
 `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
@@ -80,7 +71,8 @@ homeSection.innerHTML="API Error";
 
 async function renderWeather(current,forecast){
 
-const icon = weatherSettings[current.weather[0].main] || "🌡️";
+const weatherMain = current.weather[0].main;
+const icon = weatherIcons[weatherMain] || "🌡️";
 
 const lat=current.coord.lat;
 const lon=current.coord.lon;
@@ -95,14 +87,21 @@ if(aqi===5) aqiText="Very Poor";
 
 /* SUNRISE SUNSET */
 
-const sunrise = new Date(current.sys.sunrise*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
-const sunset = new Date(current.sys.sunset*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+const sunrise = new Date(current.sys.sunrise*1000)
+.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+
+const sunset = new Date(current.sys.sunset*1000)
+.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
 
 /* FEELS LIKE */
 
 const feels=current.main.feels_like.toFixed(1);
 
-/* GROUP FORECAST */
+/* HOURLY */
+
+const hourly = forecast.list.slice(0,8);
+
+/* GROUP DAILY */
 
 const daily={};
 
@@ -115,11 +114,12 @@ daily[date].push(item);
 const days=Object.keys(daily);
 const tomorrow=days[1];
 const fiveDays=days.slice(1,6);
-const hourly=forecast.list.slice(0,8);
 
 /* HTML */
 
 homeSection.innerHTML=`
+
+<div id="weatherAnimation"></div>
 
 <div class="current-weather">
 
@@ -141,30 +141,23 @@ homeSection.innerHTML=`
 
 </div>
 
-
 <div class="aqi-card">
 
 <h3>Air Quality</h3>
-
-<p>AQI Level: ${aqiText}</p>
+<p>${aqiText}</p>
 
 </div>
-
 
 <div class="prevention-card">
 
 <h3>Health Advice</h3>
-
-<p>Drink water, avoid long exposure if pollution is high, and wear suitable clothes based on temperature.</p>
+<p>Stay hydrated and avoid pollution exposure.</p>
 
 </div>
 
-
 <div class="swipe-container">
 
-<div class="swipe-slider" id="swipeSlider">
-
-<!-- HOURLY -->
+<div class="swipe-slider" id="slider">
 
 <div class="swipe-slide">
 
@@ -181,7 +174,7 @@ const main=h.weather[0].main;
 return`
 <div class="hour-card">
 <p>${time}</p>
-<p>${weatherSettings[main]}</p>
+<p>${weatherIcons[main]}</p>
 <p>${temp}°C</p>
 </div>
 `;
@@ -191,8 +184,6 @@ return`
 </div>
 
 </div>
-
-<!-- TOMORROW -->
 
 <div class="swipe-slide">
 
@@ -206,17 +197,13 @@ const time=t.dt_txt.split(" ")[1].slice(0,5);
 const temp=t.main.temp.toFixed(1);
 const main=t.weather[0].main;
 
-return`
-<p>${time} ${weatherSettings[main]} ${temp}°C</p>
-`;
+return `<p>${time} ${weatherIcons[main]} ${temp}°C</p>`;
 
 }).join("")}
 
 </div>
 
 </div>
-
-<!-- FIVE DAYS -->
 
 <div class="swipe-slide">
 
@@ -227,15 +214,13 @@ return`
 ${fiveDays.map(day=>{
 
 const avg=(daily[day].reduce((s,d)=>s+d.main.temp,0)/daily[day].length).toFixed(1);
-
 const main=daily[day][0].weather[0].main;
-
-const dayName = new Date(day).toLocaleDateString("en-US",{weekday:"short"});
+const name=new Date(day).toLocaleDateString("en-US",{weekday:"short"});
 
 return`
 <div class="forecast-card">
-<p>${dayName}</p>
-<p>${weatherSettings[main]}</p>
+<p>${name}</p>
+<p>${weatherIcons[main]}</p>
 <p>${avg}°C</p>
 </div>
 `;
@@ -249,10 +234,10 @@ return`
 </div>
 
 </div>
-
 `;
 
 initSwipe();
+runAnimation(weatherMain);
 
 }
 
@@ -260,7 +245,7 @@ initSwipe();
 
 function initSwipe(){
 
-const slider=document.getElementById("swipeSlider");
+const slider=document.getElementById("slider");
 
 let startX=0;
 let index=0;
@@ -282,58 +267,59 @@ slider.style.transform=`translateX(-${index*100}%)`;
 
 }
 
-/* AI FUNCTIONS */
+/* WEATHER ANIMATION */
 
-function fillQuestion(q){
-document.getElementById("aiInput").value=q;
-}
+function runAnimation(type){
 
-function askAI(){
+const box=document.getElementById("weatherAnimation");
 
-const tempElement=document.querySelector(".current-weather h1");
+if(!box) return;
 
-if(!tempElement){
-document.getElementById("aiOutput").innerText="Load weather first.";
-return;
-}
+box.innerHTML="";
 
-const temp=parseInt(tempElement.innerText);
+if(type==="Rain"){
 
-const q=document.getElementById("aiInput").value.toLowerCase();
+for(let i=0;i<40;i++){
 
-let answer="I cannot answer that.";
+const drop=document.createElement("div");
 
-if(q.includes("temperature")){
-answer="Current temperature is "+temp+"°C";
-}
+drop.className="rain-drop";
+drop.style.left=Math.random()*100+"%";
 
-else if(q.includes("wear")){
-
-if(temp<10) answer="Wear a warm jacket.";
-else if(temp<20) answer="Light jacket recommended.";
-else if(temp<30) answer="Normal clothes are fine.";
-else answer="Wear cotton clothes.";
+box.appendChild(drop);
 
 }
 
-else if(q.includes("crop")){
-answer="Rice, wheat and vegetables grow well in this weather.";
 }
 
-else if(q.includes("disease")){
-answer="Flu or dehydration can occur depending on weather.";
+else if(type==="Clear"){
+
+const sun=document.createElement("div");
+sun.className="sun";
+box.appendChild(sun);
+
 }
 
-document.getElementById("aiOutput").innerText=answer;
+else if(type==="Clouds"){
+
+const cloud=document.createElement("div");
+cloud.className="cloud";
+box.appendChild(cloud);
+
+}
 
 }
 
 /* SEARCH */
 
 searchBtn.addEventListener("click",()=>{
-if(searchInput.value.trim()){
-getWeather(searchInput.value.trim());
+
+const city=searchInput.value.trim();
+
+if(city){
+getWeather(city);
 }
+
 });
 
 /* DARK MODE */
@@ -357,7 +343,7 @@ const res=await fetch(
 `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
 );
 
-const data=await res.json();
+const current=await res.json();
 
 const forecastRes=await fetch(
 `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
@@ -365,7 +351,7 @@ const forecastRes=await fetch(
 
 const forecast=await forecastRes.json();
 
-renderWeather(data,forecast);
+renderWeather(current,forecast);
 
 });
 
