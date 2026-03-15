@@ -54,7 +54,8 @@ async function getWeather(city) {
         const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`);
         const forecast = await forecastRes.json();
         renderWeather(current, forecast);
-    } catch {
+    } catch (err) {
+        console.error("Weather API Error:", err);
         homeSection.innerHTML = "<p>Weather API Error</p>";
     }
 }
@@ -67,7 +68,8 @@ async function getWeatherByLocation(lat, lon) {
         const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
         const forecast = await forecastRes.json();
         renderWeather(current, forecast);
-    } catch {
+    } catch (err) {
+        console.error("Location weather fetch failed:", err);
         homeSection.innerHTML = "<p>Location weather fetch failed</p>";
     }
 }
@@ -174,7 +176,6 @@ function runAnimation(type) {
     const box = document.getElementById("weatherAnimation");
     box.innerHTML = "";
 
-    // Clouds
     for(let i=0;i<6;i++){
         const cloud = document.createElement("div");
         cloud.className = "cloud";
@@ -183,7 +184,6 @@ function runAnimation(type) {
         box.appendChild(cloud);
     }
 
-    // Rain
     if(type==="Rain" || type==="Drizzle"){
         for(let i=0;i<120;i++){
             const drop = document.createElement("div");
@@ -194,7 +194,6 @@ function runAnimation(type) {
         }
     }
 
-    // Sun
     if(type==="Clear"){
         const sun = document.createElement("div");
         sun.className="sun";
@@ -219,7 +218,7 @@ function initSwipe(){
     });
 }
 
-/* SEARCH */
+/* SEARCH BUTTON */
 searchBtn.addEventListener("click",()=>{
     const city = searchInput.value.trim();
     if(city) getWeather(city);
