@@ -82,8 +82,8 @@ async function renderWeather(current, forecast) {
     const lon = current.coord.lon;
     const aqi = await getAQI(lat, lon);
 
-    const 🌄sunrise = new Date(current.sys.sunrise * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    const 🌇sunset = new Date(current.sys.sunset * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const sunriseTime = new Date(current.sys.sunrise * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const sunsetTime = new Date(current.sys.sunset * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
     const hourly = forecast.list.slice(0, 8);
 
@@ -112,8 +112,8 @@ async function renderWeather(current, forecast) {
         <p>Feels Like ${current.main.feels_like.toFixed(1)}°C</p>
         <p>Humidity ${current.main.humidity}%</p>
         <p>Wind ${current.wind.speed} m/s</p>
-        <p>🌄Sunrise ${sunrise}</p>
-        <p>🌇Sunset ${sunset}</p>
+        <p>🌄Sunrise ${sunriseTime}</p>
+        <p>🌇Sunset ${sunsetTime}</p>
     </div>
 
     <div class="aqi-card">
@@ -233,13 +233,15 @@ themeToggle.addEventListener("click",()=>{
     document.body.classList.toggle("dark-mode");
 });
 
-/* AUTO LOCATION */
+/* AUTO LOCATION WITH DELHI DEFAULT */
 window.addEventListener("load",()=>{
+    getWeather("Delhi"); // Default
     if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(pos=>{
-            getWeatherByLocation(pos.coords.latitude,pos.coords.longitude);
-        },()=>{ getWeather("Delhi"); });
-    } else { getWeather("Delhi"); }
+        navigator.geolocation.getCurrentPosition(
+            pos => getWeatherByLocation(pos.coords.latitude, pos.coords.longitude),
+            err => console.warn("Geolocation failed:", err)
+        );
+    }
 });
 
 /* AI RULE-BASED LOGIC */
