@@ -158,13 +158,20 @@ if(weatherMain==="Clear") advice="Wear sunglasses 😎"
 if(weatherMain==="Clouds") advice="Light jacket recommended"
 if(aqi>=4) advice="Avoid outdoor activities"
 
+/* CITY NAME FIX */
+
+let cityName=current.name
+if(cityName.toLowerCase().includes("belanganj")){
+cityName="Agra"
+}
+
 /* UI */
 
 homeSection.innerHTML=`
 
 <div class="current-weather">
 
-<h2>${current.name}, ${current.sys.country}</h2>
+<h2>${cityName}, ${current.sys.country}</h2>
 
 <h1>${currentTemp.toFixed(1)}°C</h1>
 
@@ -404,3 +411,52 @@ getWeather("Delhi")
 }
 
 })
+
+/* AI HELPER */
+
+function fillQuestion(q){
+document.getElementById("aiInput").value=q
+}
+
+function askAI(){
+
+const q=document.getElementById("aiInput").value.toLowerCase()
+const out=document.getElementById("aiOutput")
+
+let ans="Ask about weather, clothes, crops or health."
+
+if(q.includes("temperature")){
+ans=`Current temperature is ${currentTemp.toFixed(1)}°C`
+}
+
+else if(q.includes("wear")){
+
+if(currentWeather==="Rain"){
+ans="Carry umbrella and waterproof shoes ☔"
+}
+
+else if(currentTemp>32){
+ans="Wear light cotton clothes ☀️"
+}
+
+else if(currentTemp<15){
+ans="Wear warm jacket 🧥"
+}
+
+else{
+ans="Comfortable casual clothes recommended."
+}
+
+}
+
+else if(q.includes("crop")){
+ans="Weather suitable for wheat, maize or rice depending on rainfall."
+}
+
+else if(q.includes("disease")){
+ans="Protect yourself from seasonal flu or heat exhaustion."
+}
+
+out.innerText=ans
+
+}
