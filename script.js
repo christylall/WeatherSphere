@@ -49,7 +49,7 @@ return "--"
 
 }
 
-/* WEATHER BY CITY */
+/* WEATHER */
 
 async function getWeather(city){
 
@@ -74,7 +74,7 @@ const forecastRes=await fetch(
 
 const forecast=await forecastRes.json()
 
-renderWeather(current)
+renderWeather(current,forecast)
 
 }catch{
 
@@ -84,13 +84,9 @@ homeSection.innerHTML="Weather API Error"
 
 }
 
-/* WEATHER BY LOCATION */
+/* LOCATION WEATHER */
 
 async function getWeatherByLocation(lat,lon){
-
-homeSection.innerHTML="Detecting weather..."
-
-try{
 
 const currentRes=await fetch(
 `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
@@ -98,19 +94,19 @@ const currentRes=await fetch(
 
 const current=await currentRes.json()
 
-renderWeather(current)
+const forecastRes=await fetch(
+`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+)
 
-}catch{
+const forecast=await forecastRes.json()
 
-homeSection.innerHTML="Location weather error"
+renderWeather(current,forecast)
 
 }
 
-}
+/* RENDER */
 
-/* RENDER WEATHER */
-
-async function renderWeather(current){
+async function renderWeather(current,forecast){
 
 const weatherMain=current.weather[0].main
 currentWeather=weatherMain
@@ -129,6 +125,30 @@ const sunrise=new Date(current.sys.sunrise*1000)
 const sunset=new Date(current.sys.sunset*1000)
 .toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})
 
+const hourly=forecast.list.slice(0,8)
+
+/* DAILY GROUP */
+
+const daily={}
+
+forecast.list.forEach(item=>{
+
+const date=item.dt_txt.split(" ")[0]
+
+if(!daily[date]) daily[date]=[]
+
+daily[date].push(item)
+
+})
+
+const days=Object.keys(daily)
+
+const tomorrow=days[1]
+
+const fiveDays=days.slice(1,6)
+
+/* HEALTH ADVICE */
+
 let advice="Stay hydrated"
 
 if(weatherMain==="Rain") advice="Carry umbrella ☔"
@@ -136,7 +156,11 @@ if(weatherMain==="Clear") advice="Wear sunglasses 😎"
 if(weatherMain==="Clouds") advice="Light jacket recommended"
 if(aqi>=4) advice="Avoid outdoor activities"
 
+/* UI */
+
 homeSection.innerHTML=`
+
+<div id="weatherAnimation"></div>
 
 <div class="current-weather">
 
@@ -168,13 +192,99 @@ homeSection.innerHTML=`
 <p>${advice}</p>
 </div>
 
+<div class="swipe-container">
+
+<div class="swipe-slider" id="slider">
+
+<div class="swipe-slide">
+
+<h3>Hourly Forecast</h3>
+
+<div class="hourly-cards">
+
+${hourly.map(h=>{
+
+const time=h.dt_txt.split(" ")[1].slice(0,5)
+const temp=h.main.temp.toFixed(1)
+const main=h.weather[0].main
+
+return`
+
+<div class="hour-card">
+<p>${time}</p>
+<p>${weatherIcons[main]}</p>
+<p>${temp}°C</p>
+</div>
+
+`
+
+}).join("")}
+
+</div>
+
+</div>
+
+<div class="swipe-slide">
+
+<h3>Tomorrow</h3>
+
+<div class="tomorrow-box">
+
+${daily[tomorrow].map(t=>{
+
+const time=t.dt_txt.split(" ")[1].slice(0,5)
+const temp=t.main.temp.toFixed(1)
+const main=t.weather[0].main
+
+return `<p>${time} ${weatherIcons[main]} ${temp}°C</p>`
+
+}).join("")}
+
+</div>
+
+</div>
+
+<div class="swipe-slide">
+
+<h3>5 Day Forecast</h3>
+
+<div class="forecast-cards">
+
+${fiveDays.map(day=>{
+
+const avg=(daily[day].reduce((s,d)=>s+d.main.temp,0)/daily[day].length).toFixed(1)
+
+const main=daily[day][0].weather[0].main
+
+const name=new Date(day).toLocaleDateString("en-US",{weekday:"short"})
+
+return`
+
+<div class="forecast-card">
+<p>${name}</p>
+<p>${weatherIcons[main]}</p>
+<p>${avg}°C</p>
+</div>
+
+`
+
+}).join("")}
+
+</div>
+
+</div>
+
+</div>
+
+</div>
 `
 
 runAnimation(weatherMain)
+initSwipe()
 
 }
 
-/* WEATHER ANIMATION */
+/* ANIMATION */
 
 function runAnimation(type){
 
@@ -182,8 +292,6 @@ const box=document.getElementById("weatherAnimation")
 if(!box) return
 
 box.innerHTML=""
-
-/* RAIN */
 
 if(type==="Rain"||type==="Drizzle"){
 
@@ -201,8 +309,6 @@ box.appendChild(drop)
 
 }
 
-/* SUNNY */
-
 else if(type==="Clear"){
 
 const sun=document.createElement("div")
@@ -216,13 +322,12 @@ box.appendChild(rays)
 
 }
 
-/* CLOUDS */
-
 else if(type==="Clouds"){
 
 for(let i=0;i<5;i++){
 
 const cloud=document.createElement("div")
+
 cloud.className="cloud"
 
 cloud.style.top=(10+i*15)+"%"
@@ -236,22 +341,37 @@ box.appendChild(cloud)
 
 }
 
-/* SEARCH */
+/* SWIPE */
 
-searchBtn.addEventListener("click",()=>{
+function initSwipe(){
 
-const city=searchInput.value.trim()
+const slider=document.getElementById("slider")
 
-if(city) getWeather(city)
+let startX=0
+let index=0
+
+slider.addEventListener("touchstart",e=>{
+startX=e.touches[0].clientX
+})
+
+slider.addEventListener("touchend",e=>{
+
+const diff=startX-e.changedTouches[0].clientX
+
+if(diff>50 && index<2) index++
+if(diff<-50 && index>0) index--
+
+slider.style.transform=`translateX(-${index*100}%)`
 
 })
 
-/* ENTER KEY SEARCH */
-
-searchInput.addEventListener("keypress",e=>{
-if(e.key==="Enter"){
-searchBtn.click()
 }
+
+/* SEARCH */
+
+searchBtn.addEventListener("click",()=>{
+const city=searchInput.value.trim()
+if(city) getWeather(city)
 })
 
 /* DARK MODE */
@@ -259,79 +379,6 @@ searchBtn.click()
 themeToggle.addEventListener("click",()=>{
 document.body.classList.toggle("dark-mode")
 })
-
-/* AI */
-
-function fillQuestion(q){
-document.getElementById("aiInput").value=q
-}
-
-function askAI(){
-
-const q=document.getElementById("aiInput").value.toLowerCase()
-const out=document.getElementById("aiOutput")
-
-let ans="Try asking: temperature, what to wear, crop or disease."
-
-if(q.includes("temperature")){
-ans=`Current temperature is ${currentTemp.toFixed(1)}°C`
-}
-
-else if(q.includes("wear")){
-
-if(currentWeather==="Rain"){
-ans="It is raining. Wear waterproof shoes and carry umbrella ☔"
-}
-
-else if(currentTemp>32){
-ans="Weather is hot. Wear light cotton clothes ☀️"
-}
-
-else if(currentTemp<15){
-ans="Weather is cold. Wear warm jacket 🧥"
-}
-
-else{
-ans="Comfortable casual clothes are suitable."
-}
-
-}
-
-else if(q.includes("crop")){
-
-if(currentWeather==="Rain"){
-ans="Rainy weather supports rice and sugarcane 🌾"
-}
-
-else if(currentTemp>30){
-ans="Warm weather is good for maize and cotton 🌽"
-}
-
-else{
-ans="Wheat grows well in this climate."
-}
-
-}
-
-else if(q.includes("disease")){
-
-if(currentWeather==="Rain"){
-ans="Mosquito diseases like dengue may increase 🦟"
-}
-
-else if(currentTemp>35){
-ans="Risk of heatstroke and dehydration."
-}
-
-else{
-ans="Normal seasonal infections may occur."
-}
-
-}
-
-out.innerText=ans
-
-}
 
 /* AUTO LOCATION */
 
@@ -345,10 +392,6 @@ getWeatherByLocation(
 pos.coords.latitude,
 pos.coords.longitude
 )
-
-},()=>{
-
-getWeather("Delhi")
 
 })
 
