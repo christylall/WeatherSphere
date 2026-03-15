@@ -16,6 +16,8 @@ getWeather(btn.dataset.location)
 })
 })
 
+/* WEATHER ICONS */
+
 const weatherIcons={
 Clear:"☀️",
 Clouds:"☁️",
@@ -49,11 +51,11 @@ return "--"
 
 }
 
-/* WEATHER */
+/* CITY WEATHER */
 
 async function getWeather(city){
 
-homeSection.innerHTML="Loading Weather..."
+homeSection.innerHTML="Loading weather..."
 
 try{
 
@@ -104,7 +106,7 @@ renderWeather(current,forecast)
 
 }
 
-/* RENDER */
+/* RENDER WEATHER */
 
 async function renderWeather(current,forecast){
 
@@ -159,8 +161,6 @@ if(aqi>=4) advice="Avoid outdoor activities"
 /* UI */
 
 homeSection.innerHTML=`
-
-<div id="weatherAnimation"></div>
 
 <div class="current-weather">
 
@@ -284,24 +284,41 @@ initSwipe()
 
 }
 
-/* ANIMATION */
+/* WEATHER ANIMATION */
 
 function runAnimation(type){
 
 const box=document.getElementById("weatherAnimation")
-if(!box) return
 
 box.innerHTML=""
 
-if(type==="Rain"||type==="Drizzle"){
+/* CLOUDS */
 
-for(let i=0;i<80;i++){
+for(let i=0;i<6;i++){
+
+const cloud=document.createElement("div")
+
+cloud.className="cloud"
+
+cloud.style.top=(10+i*10)+"%"
+cloud.style.animationDuration=(20+Math.random()*20)+"s"
+
+box.appendChild(cloud)
+
+}
+
+/* RAIN */
+
+if(type==="Rain" || type==="Drizzle"){
+
+for(let i=0;i<120;i++){
 
 const drop=document.createElement("div")
+
 drop.className="rain-drop"
 
 drop.style.left=Math.random()*100+"%"
-drop.style.animationDuration=(0.6+Math.random())+"s"
+drop.style.animationDuration=(0.5+Math.random())+"s"
 
 box.appendChild(drop)
 
@@ -309,7 +326,9 @@ box.appendChild(drop)
 
 }
 
-else if(type==="Clear"){
+/* SUN */
+
+if(type==="Clear"){
 
 const sun=document.createElement("div")
 sun.className="sun"
@@ -319,23 +338,6 @@ rays.className="sun-rays"
 
 box.appendChild(sun)
 box.appendChild(rays)
-
-}
-
-else if(type==="Clouds"){
-
-for(let i=0;i<5;i++){
-
-const cloud=document.createElement("div")
-
-cloud.className="cloud"
-
-cloud.style.top=(10+i*15)+"%"
-cloud.style.animationDuration=(25+i*5)+"s"
-
-box.appendChild(cloud)
-
-}
 
 }
 
