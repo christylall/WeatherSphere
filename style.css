@@ -328,3 +328,17 @@ color:white;
 margin-bottom:20px;
 text-align:center;
 }
+.extra-info{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+gap:10px;
+margin-top:15px;
+}
+
+.extra-info p{
+background:rgba(255,255,255,0.2);
+padding:10px;
+border-radius:10px;
+text-align:center;
+font-weight:500;
+}
