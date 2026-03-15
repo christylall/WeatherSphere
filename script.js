@@ -161,6 +161,7 @@ if(aqi>=4) advice="Avoid outdoor activities"
 /* CITY NAME FIX */
 
 let cityName=current.name
+
 if(cityName.toLowerCase().includes("belanganj")){
 cityName="Agra"
 }
@@ -199,96 +200,9 @@ homeSection.innerHTML=`
 <p>${advice}</p>
 </div>
 
-<div class="swipe-container">
-
-<div class="swipe-slider" id="slider">
-
-<div class="swipe-slide">
-
-<h3>Hourly Forecast</h3>
-
-<div class="hourly-cards">
-
-${hourly.map(h=>{
-
-const time=h.dt_txt.split(" ")[1].slice(0,5)
-const temp=h.main.temp.toFixed(1)
-const main=h.weather[0].main
-
-return`
-
-<div class="hour-card">
-<p>${time}</p>
-<p>${weatherIcons[main]}</p>
-<p>${temp}°C</p>
-</div>
-
-`
-
-}).join("")}
-
-</div>
-
-</div>
-
-<div class="swipe-slide">
-
-<h3>Tomorrow</h3>
-
-<div class="tomorrow-box">
-
-${daily[tomorrow].map(t=>{
-
-const time=t.dt_txt.split(" ")[1].slice(0,5)
-const temp=t.main.temp.toFixed(1)
-const main=t.weather[0].main
-
-return `<p>${time} ${weatherIcons[main]} ${temp}°C</p>`
-
-}).join("")}
-
-</div>
-
-</div>
-
-<div class="swipe-slide">
-
-<h3>5 Day Forecast</h3>
-
-<div class="forecast-cards">
-
-${fiveDays.map(day=>{
-
-const avg=(daily[day].reduce((s,d)=>s+d.main.temp,0)/daily[day].length).toFixed(1)
-
-const main=daily[day][0].weather[0].main
-
-const name=new Date(day).toLocaleDateString("en-US",{weekday:"short"})
-
-return`
-
-<div class="forecast-card">
-<p>${name}</p>
-<p>${weatherIcons[main]}</p>
-<p>${avg}°C</p>
-</div>
-
-`
-
-}).join("")}
-
-</div>
-
-</div>
-
-</div>
-
-</div>
 `
 
 runAnimation(weatherMain)
-initSwipe()
-
 }
 
 /* WEATHER ANIMATION */
@@ -350,32 +264,6 @@ box.appendChild(rays)
 
 }
 
-/* SWIPE */
-
-function initSwipe(){
-
-const slider=document.getElementById("slider")
-
-let startX=0
-let index=0
-
-slider.addEventListener("touchstart",e=>{
-startX=e.touches[0].clientX
-})
-
-slider.addEventListener("touchend",e=>{
-
-const diff=startX-e.changedTouches[0].clientX
-
-if(diff>50 && index<2) index++
-if(diff<-50 && index>0) index--
-
-slider.style.transform=`translateX(-${index*100}%)`
-
-})
-
-}
-
 /* SEARCH */
 
 searchBtn.addEventListener("click",()=>{
@@ -415,15 +303,18 @@ getWeather("Delhi")
 /* AI HELPER */
 
 function fillQuestion(q){
+
 document.getElementById("aiInput").value=q
+
 }
 
 function askAI(){
 
 const q=document.getElementById("aiInput").value.toLowerCase()
+
 const out=document.getElementById("aiOutput")
 
-let ans="Ask about weather, clothes, crops or health."
+let ans="Ask something about weather."
 
 if(q.includes("temperature")){
 ans=`Current temperature is ${currentTemp.toFixed(1)}°C`
@@ -432,29 +323,25 @@ ans=`Current temperature is ${currentTemp.toFixed(1)}°C`
 else if(q.includes("wear")){
 
 if(currentWeather==="Rain"){
-ans="Carry umbrella and waterproof shoes ☔"
+ans="Carry umbrella ☔"
 }
 
 else if(currentTemp>32){
 ans="Wear light cotton clothes ☀️"
 }
 
-else if(currentTemp<15){
-ans="Wear warm jacket 🧥"
-}
-
 else{
-ans="Comfortable casual clothes recommended."
+ans="Normal comfortable clothes are fine."
 }
 
 }
 
 else if(q.includes("crop")){
-ans="Weather suitable for wheat, maize or rice depending on rainfall."
+ans="This weather supports crops like wheat, rice or maize."
 }
 
 else if(q.includes("disease")){
-ans="Protect yourself from seasonal flu or heat exhaustion."
+ans="Protect yourself from seasonal flu and dehydration."
 }
 
 out.innerText=ans
