@@ -45,7 +45,7 @@ Search
 </section>
 
 
-<!-- QUICK LOCATION BUTTONS -->
+<!-- QUICK LOCATION -->
 
 <section class="location-buttons">
 
@@ -62,162 +62,8 @@ Search
 <section id="homeSection">
 
 <p class="loading-text">
-Search a city or allow location access to see weather
+Detecting your location...
 </p>
-
-</section>
-
-
-<!-- WEATHER ANIMATION -->
-
-<div id="weatherAnimation"></div>
-
-
-<!-- CURRENT WEATHER DETAILS -->
-
-<section id="weatherDetails">
-
-<div class="current-weather">
-
-<h2 id="cityName">City</h2>
-
-<p id="temperature">--°C</p>
-
-<p id="weatherDesc">---</p>
-
-</div>
-
-
-<!-- EXTRA INFO -->
-
-<div class="extra-info">
-
-<p>Feels Like: <span id="feelsLike">--</span>°C</p>
-
-<p>Humidity: <span id="humidity">--</span>%</p>
-
-<p>Wind Speed: <span id="windSpeed">--</span> km/h</p>
-
-<p>Sunrise: <span id="sunrise">--</span></p>
-
-<p>Sunset: <span id="sunset">--</span></p>
-
-</div>
-
-</section>
-
-
-<!-- AQI CARD -->
-
-<div class="aqi-card">
-
-<h3>Air Quality Index</h3>
-
-<p id="aqiValue">--</p>
-
-</div>
-
-
-<!-- PREVENTION CARD -->
-
-<div class="prevention-card">
-
-<h3>Health Advice</h3>
-
-<p id="preventionText">
-Weather based suggestions will appear here
-</p>
-
-</div>
-
-
-<!-- SLIDER -->
-
-<div class="swipe-container">
-
-<div class="swipe-slider" id="forecastSlider">
-
-
-<!-- HOURLY FORECAST -->
-
-<div class="swipe-slide">
-
-<h3>Hourly Forecast</h3>
-
-<div class="hourly-cards" id="hourlyForecast">
-
-</div>
-
-</div>
-
-
-<!-- TOMORROW FORECAST -->
-
-<div class="swipe-slide">
-
-<h3>Tomorrow</h3>
-
-<div class="tomorrow-box" id="tomorrowForecast">
-
-</div>
-
-</div>
-
-
-<!-- FIVE DAY FORECAST -->
-
-<div class="swipe-slide">
-
-<h3>5 Day Forecast</h3>
-
-<div class="forecast-cards" id="fiveDayForecast">
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-<!-- AI CHAT -->
-
-<section class="ai-chat">
-
-<h3>🤖 WeatherSphere AI</h3>
-
-<div class="suggestions">
-
-<p>Try asking:</p>
-
-<button onclick="fillQuestion('What is the temperature here?')">
-Temperature Here
-</button>
-
-<button onclick="fillQuestion('What should I wear in this weather?')">
-Dress Suggestion
-</button>
-
-<button onclick="fillQuestion('Which crop grows best in this weather?')">
-Best Crop
-</button>
-
-<button onclick="fillQuestion('What disease can occur in this weather?')">
-Disease Risk
-</button>
-
-</div>
-
-
-<input 
-id="aiInput" 
-placeholder="Ask weather related question..."
->
-
-<button onclick="askAI()">Ask AI</button>
-
-<p id="aiOutput"></p>
 
 </section>
 
@@ -233,9 +79,7 @@ WeatherSphere © 2025 | Developed by Christy Lall
 
 </div>
 
-
 <script src="script.js"></script>
-
 
 <script>
 
@@ -243,16 +87,12 @@ document.getElementById("searchInput")
 .addEventListener("keypress",function(e){
 
 if(e.key==="Enter"){
-
 document.getElementById("searchBtn").click()
-
 }
 
 })
 
 </script>
 
-
 </body>
-
 </html>
