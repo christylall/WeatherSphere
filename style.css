@@ -410,3 +410,18 @@ min-width:80px;
 }
 
 }
+.ai-container{
+display:flex;
+align-items:center;
+gap:20px;
+flex-wrap:wrap;
+}
+
+.ai-image{
+width:180px;
+border-radius:15px;
+}
+
+.ai-box{
+flex:1;
+}
