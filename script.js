@@ -82,8 +82,8 @@ async function renderWeather(current, forecast) {
     const lon = current.coord.lon;
     const aqi = await getAQI(lat, lon);
 
-    const sunrise = new Date(current.sys.sunrise * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    const sunset = new Date(current.sys.sunset * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const 🌄sunrise = new Date(current.sys.sunrise * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const 🌇sunset = new Date(current.sys.sunset * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
     const hourly = forecast.list.slice(0, 8);
 
