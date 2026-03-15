@@ -5,6 +5,15 @@ const searchBtn=document.getElementById("searchBtn")
 const searchInput=document.getElementById("searchInput")
 const themeToggle=document.getElementById("themeToggle")
 
+/* QUICK CITY BUTTONS */
+
+document.querySelectorAll(".location-btn").forEach(btn=>{
+btn.addEventListener("click",()=>{
+const city=btn.dataset.location
+getWeather(city)
+})
+})
+
 const weatherIcons={
 Clear:"☀️",
 Clouds:"☁️",
@@ -38,7 +47,7 @@ return "--"
 
 }
 
-/* WEATHER */
+/* WEATHER BY CITY */
 
 async function getWeather(city){
 
@@ -73,7 +82,37 @@ homeSection.innerHTML="Weather API Error"
 
 }
 
-/* RENDER */
+/* WEATHER BY LOCATION */
+
+async function getWeatherByLocation(lat,lon){
+
+homeSection.innerHTML="Detecting weather..."
+
+try{
+
+const currentRes=await fetch(
+`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+)
+
+const current=await currentRes.json()
+
+const forecastRes=await fetch(
+`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+)
+
+const forecast=await forecastRes.json()
+
+renderWeather(current,forecast)
+
+}catch{
+
+homeSection.innerHTML="Location weather error"
+
+}
+
+}
+
+/* RENDER WEATHER */
 
 async function renderWeather(current,forecast){
 
@@ -98,13 +137,9 @@ const hourly=forecast.list.slice(0,8)
 const daily={}
 
 forecast.list.forEach(item=>{
-
 const date=item.dt_txt.split(" ")[0]
-
 if(!daily[date]) daily[date]=[]
-
 daily[date].push(item)
-
 })
 
 const days=Object.keys(daily)
@@ -156,104 +191,17 @@ homeSection.innerHTML=`
 <p>${advice}</p>
 </div>
 
-<div class="swipe-container">
-
-<div class="swipe-slider" id="slider">
-
-<div class="swipe-slide">
-
-<h3>Hourly Forecast</h3>
-
-<div class="hourly-cards">
-
-${hourly.map(h=>{
-
-const time=h.dt_txt.split(" ")[1].slice(0,5)
-const temp=h.main.temp.toFixed(1)
-const main=h.weather[0].main
-
-return`
-
-<div class="hour-card">
-<p>${time}</p>
-<p>${weatherIcons[main]}</p>
-<p>${temp}°C</p>
-</div>
-
-`
-
-}).join("")}
-
-</div>
-
-</div>
-
-<div class="swipe-slide">
-
-<h3>Tomorrow</h3>
-
-<div class="tomorrow-box">
-
-${daily[tomorrow].map(t=>{
-
-const time=t.dt_txt.split(" ")[1].slice(0,5)
-const temp=t.main.temp.toFixed(1)
-const main=t.weather[0].main
-
-return `<p>${time} ${weatherIcons[main]} ${temp}°C</p>`
-
-}).join("")}
-
-</div>
-
-</div>
-
-<div class="swipe-slide">
-
-<h3>5 Day Forecast</h3>
-
-<div class="forecast-cards">
-
-${fiveDays.map(day=>{
-
-const avg=(daily[day].reduce((s,d)=>s+d.main.temp,0)/daily[day].length).toFixed(1)
-
-const main=daily[day][0].weather[0].main
-
-const name=new Date(day).toLocaleDateString("en-US",{weekday:"short"})
-
-return`
-
-<div class="forecast-card">
-<p>${name}</p>
-<p>${weatherIcons[main]}</p>
-<p>${avg}°C</p>
-</div>
-
-`
-
-}).join("")}
-
-</div>
-
-</div>
-
-</div>
-
-</div>
 `
 
 runAnimation(weatherMain)
-initSwipe()
 
 }
 
-/* ANIMATION */
+/* WEATHER ANIMATION */
 
 function runAnimation(type){
 
 const box=document.getElementById("weatherAnimation")
-
 if(!box) return
 
 box.innerHTML=""
@@ -265,7 +213,6 @@ if(type==="Rain" || type==="Drizzle"){
 for(let i=0;i<60;i++){
 
 const drop=document.createElement("div")
-
 drop.className="rain-drop"
 
 drop.style.left=Math.random()*100+"%"
@@ -283,6 +230,7 @@ else if(type==="Clear"){
 
 const sun=document.createElement("div")
 sun.className="sun"
+
 box.appendChild(sun)
 
 }
@@ -306,50 +254,6 @@ box.appendChild(cloud)
 
 }
 
-/* SNOW */
-
-else if(type==="Snow"){
-
-for(let i=0;i<40;i++){
-
-const snow=document.createElement("div")
-
-snow.className="snow"
-
-snow.style.left=Math.random()*100+"%"
-
-box.appendChild(snow)
-
-}
-
-}
-
-}
-
-/* SWIPE */
-
-function initSwipe(){
-
-const slider=document.getElementById("slider")
-
-let startX=0
-let index=0
-
-slider.addEventListener("touchstart",e=>{
-startX=e.touches[0].clientX
-})
-
-slider.addEventListener("touchend",e=>{
-
-const diff=startX-e.changedTouches[0].clientX
-
-if(diff>50 && index<2) index++
-if(diff<-50 && index>0) index--
-
-slider.style.transform=`translateX(-${index*100}%)`
-
-})
-
 }
 
 /* SEARCH */
@@ -368,30 +272,55 @@ themeToggle.addEventListener("click",()=>{
 document.body.classList.toggle("dark-mode")
 })
 
+/* AI FUNCTIONS */
+
+function fillQuestion(q){
+document.getElementById("aiInput").value=q
+}
+
+function askAI(){
+
+const question=document.getElementById("aiInput").value.toLowerCase()
+const output=document.getElementById("aiOutput")
+
+let answer="Try asking about weather, clothes or crops."
+
+if(question.includes("wear")){
+answer="Wear light clothes in heat, jackets in cold, and carry umbrella during rain."
+}
+
+else if(question.includes("crop")){
+answer="Rice grows well in rain, wheat in cool weather and maize in warm climate."
+}
+
+else if(question.includes("disease")){
+answer="Rainy weather increases mosquito diseases like dengue."
+}
+
+else if(question.includes("temperature")){
+answer="The temperature is shown in the weather section above."
+}
+
+output.innerText=answer
+
+}
+
 /* AUTO LOCATION */
 
 window.addEventListener("load",()=>{
 
 if(navigator.geolocation){
 
-navigator.geolocation.getCurrentPosition(async pos=>{
+navigator.geolocation.getCurrentPosition(pos=>{
 
 const lat=pos.coords.latitude
 const lon=pos.coords.longitude
 
-const res=await fetch(
-`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
-)
+getWeatherByLocation(lat,lon)
 
-const current=await res.json()
+},()=>{
 
-const forecastRes=await fetch(
-`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
-)
-
-const forecast=await forecastRes.json()
-
-renderWeather(current,forecast)
+getWeather("Delhi")
 
 })
 
