@@ -1,15 +1,15 @@
 :root{
---primary:#4a90e2;
---secondary:#f39c12;
---bg:#f4f6f8;
---text:#333;
+--primary:#800000;
+--secondary:#d4af37;
+--bg:#fff8f0;
+--text:#3b2f2f;
 --radius:12px;
 --shadow:0 4px 12px rgba(0,0,0,0.1);
 }
 
 body.dark-mode{
---bg:#1b1b2f;
---text:#eee;
+--bg:#2b1b1b;
+--text:#f5e6d3;
 }
 
 *{
@@ -19,7 +19,7 @@ box-sizing:border-box;
 }
 
 body{
-font-family:Segoe UI,Tahoma,sans-serif;
+font-family:'Poppins',Segoe UI,Tahoma,sans-serif;
 background:var(--bg);
 color:var(--text);
 min-height:100vh;
@@ -74,6 +74,7 @@ flex:1;
 padding:12px;
 border-radius:var(--radius);
 border:2px solid var(--primary);
+background:#fff8f0;
 }
 
 .search-btn{
@@ -98,7 +99,7 @@ margin-bottom:20px;
 padding:8px 14px;
 border-radius:var(--radius);
 border:2px solid var(--primary);
-background:white;
+background:#fff8f0;
 cursor:pointer;
 }
 
@@ -130,15 +131,16 @@ margin-top:15px;
 }
 
 .extra-info p{
-background:rgba(255,255,255,0.25);
+background:rgba(255,248,240,0.3);
 padding:10px;
 border-radius:10px;
+color:white;
 }
 
 /* AQI */
 
 .aqi-card{
-background:linear-gradient(135deg,#27ae60,#2ecc71);
+background:linear-gradient(135deg,#6d0000,#a52a2a);
 padding:15px;
 border-radius:var(--radius);
 color:white;
@@ -149,7 +151,7 @@ text-align:center;
 /* HEALTH */
 
 .prevention-card{
-background:linear-gradient(135deg,#e67e22,#f39c12);
+background:linear-gradient(135deg,#b8860b,#d4af37);
 padding:15px;
 border-radius:var(--radius);
 color:white;
@@ -227,14 +229,14 @@ min-width:90px;
 
 .ai-chat{
 margin-top:30px;
-background:white;
+background:#fff8f0;
 padding:20px;
 border-radius:10px;
 box-shadow:var(--shadow);
 }
 
 body.dark-mode .ai-chat{
-background:#2a2a40;
+background:#3b2323;
 }
 
 .ai-chat h3{
@@ -253,7 +255,7 @@ margin-bottom:15px;
 padding:8px 12px;
 border:none;
 border-radius:6px;
-background:#4CAF50;
+background:#800000;
 color:white;
 cursor:pointer;
 }
@@ -268,7 +270,7 @@ margin-bottom:10px;
 
 .ai-btn{
 padding:10px 15px;
-background:#2196F3;
+background:linear-gradient(135deg,var(--primary),var(--secondary));
 border:none;
 border-radius:6px;
 color:white;
@@ -277,13 +279,13 @@ cursor:pointer;
 
 .ai-output{
 margin-top:10px;
-background:#f4f4f4;
+background:#f4e8dc;
 padding:10px;
 border-radius:6px;
 }
 
 body.dark-mode .ai-output{
-background:#3a3a55;
+background:#4a2c2c;
 }
 
 /* FOOTER */
@@ -297,131 +299,9 @@ background:linear-gradient(135deg,var(--primary),var(--secondary));
 color:white;
 }
 
-/* WEATHER BACKGROUND */
+/* HOVER EFFECT */
 
-#weatherAnimation{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-z-index:0;
-pointer-events:none;
-overflow:hidden;
-}
-
-/* CLOUDS */
-
-.cloud{
-position:absolute;
-width:160px;
-height:70px;
-background:white;
-border-radius:60px;
-opacity:.8;
-animation:cloudMove linear infinite;
-}
-
-.cloud::before{
-content:"";
-position:absolute;
-width:70px;
-height:70px;
-background:white;
-border-radius:50%;
-top:-20px;
-left:25px;
-}
-
-.cloud::after{
-content:"";
-position:absolute;
-width:90px;
-height:90px;
-background:white;
-border-radius:50%;
-top:-35px;
-left:60px;
-}
-
-@keyframes cloudMove{
-0%{transform:translateX(-200px)}
-100%{transform:translateX(120vw)}
-}
-
-/* RAIN */
-
-.rain-drop{
-position:absolute;
-width:2px;
-height:18px;
-background:#7ec8ff;
-opacity:.8;
-animation:rainFall linear infinite;
-}
-
-@keyframes rainFall{
-0%{transform:translateY(-20px)}
-100%{transform:translateY(120vh)}
-}
-
-/* SUN */
-
-.sun{
-position:absolute;
-top:60px;
-right:80px;
-width:90px;
-height:90px;
-border-radius:50%;
-background:radial-gradient(circle,#ffd54f,#ffb300);
-box-shadow:0 0 60px rgba(255,200,0,0.8);
-}
-
-/* SUN RAYS */
-
-.sun-rays{
-position:absolute;
-top:40px;
-right:60px;
-width:140px;
-height:140px;
-border-radius:50%;
-box-shadow:0 0 80px rgba(255,200,0,0.6);
-animation:sunPulse 4s infinite;
-}
-
-@keyframes sunPulse{
-0%{transform:scale(1);opacity:.8}
-50%{transform:scale(1.15);opacity:1}
-100%{transform:scale(1);opacity:.8}
-}
-
-/* RESPONSIVE */
-
-@media(max-width:768px){
-
-.app-title{
-font-size:1.9rem;
-}
-
-.hour-card,.forecast-card{
-min-width:80px;
-}
-
-}
-.ai-container{
-display:flex;
-align-items:center;
-gap:20px;
-flex-wrap:wrap;
-}
-
-.ai-image{
-width:180px;
-border-radius:15px;
-}
-
-.ai-box{
-flex:1;
+button:hover{
+transform:scale(1.05);
+transition:0.2s;
 }
