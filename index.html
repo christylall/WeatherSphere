@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,39 +12,76 @@
 
 <div class="container">
 
+<!-- HEADER -->
 <header class="header">
 <h1 class="app-title">🌦️ WeatherSphere</h1>
-<button id="themeToggle">🌙</button>
+<button id="themeToggle" class="theme-toggle">🌙</button>
 </header>
 
+<!-- SEARCH -->
 <section class="search-section">
-<input type="text" id="searchInput" placeholder="Enter city...">
-<button id="searchBtn">Search</button>
+<input type="text" id="searchInput" class="search-input" placeholder="Enter city name...">
+<button id="searchBtn" class="search-btn">Search</button>
 </section>
 
-<section id="homeSection">
-<p>Detecting your location... 📍</p>
+<!-- WEATHER OUTPUT -->
+<section id="homeSection" class="home-section">
+<p class="loading-text">Detecting your location... 📍</p>
 </section>
 
 <!-- AI SECTION -->
-<section class="ai-box">
-<h3>🤖 Weather AI</h3>
+<section class="ai-chat">
 
-<div class="ai-controls">
-<input id="aiInput" placeholder="Ask something...">
-<button onclick="askAI()">Ask</button>
-<button onclick="startVoice()">🎤</button>
+<div class="ai-container">
+
+<!-- IMAGE -->
+<img src="https://i.ibb.co/xKgRbQxT/image.png" class="ai-image">
+
+<!-- AI BOX -->
+<div class="ai-box">
+
+<h3>🤖 Weather AI Assistant</h3>
+
+<!-- SUGGESTIONS -->
+<div class="suggestions">
+<button onclick="fillQuestion('What is the temperature here?')">Temperature</button>
+<button onclick="fillQuestion('What should I wear today?')">Clothes</button>
+<button onclick="fillQuestion('Is there any health risk today?')">Health</button>
 </div>
 
-<p id="aiOutput"></p>
+<!-- INPUT -->
+<div class="ai-controls">
+<input id="aiInput" class="ai-input" placeholder="Ask weather related question...">
+<button onclick="askAI()" class="ai-btn">Ask</button>
+<button onclick="startVoice()" class="ai-btn">🎤</button>
+</div>
+
+<!-- OUTPUT -->
+<p id="aiOutput" class="ai-output"></p>
+
+</div>
+</div>
+
 </section>
 
+<!-- FOOTER -->
 <footer>
-<p>© 2025 Christy Lall</p>
+<p>WeatherSphere © 2025 | Developed by Christy Lall</p>
 </footer>
 
 </div>
 
+<!-- JS -->
 <script src="script.js"></script>
+
+<!-- ENTER KEY SEARCH -->
+<script>
+document.getElementById("searchInput").addEventListener("keypress", function(e){
+if(e.key==="Enter"){
+document.getElementById("searchBtn").click();
+}
+});
+</script>
+
 </body>
 </html>
