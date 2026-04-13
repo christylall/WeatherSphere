@@ -10,8 +10,10 @@ const themeToggle = document.getElementById("themeToggle");
 let currentWeather = "";
 let currentTemp = 0;
 
+/* SWIPE STATE */
 let index = 0;
 let startX = 0;
+let isDragging = false;
 
 /* ICONS */
 const weatherIcons = {
@@ -73,7 +75,7 @@ async function renderWeather(current, forecast){
     if(currentTemp>35) advice="Avoid heat 🥵";
     if(aqi && aqi>=4) advice="Poor air quality 😷";
 
-    /* SAFE DAILY GROUP */
+    /* DAILY GROUP */
     const daily = {};
     forecast.list.forEach(i=>{
         const d = i.dt_txt.split(" ")[0];
@@ -81,10 +83,9 @@ async function renderWeather(current, forecast){
         daily[d].push(i);
     });
 
-    const days = Object.keys(daily).filter(Boolean);
+    const days = Object.keys(daily);
     const tomorrow = days.length > 1 ? days[1] : days[0];
     const fiveDays = days.slice(0,5);
-
     const hourly = forecast.list.slice(0,8);
 
     homeSection.innerHTML = `
@@ -132,7 +133,10 @@ async function renderWeather(current, forecast){
                 ${fiveDays.map(day=>{
                     const avg = (daily[day].reduce((s,d)=>s+d.main.temp,0)/daily[day].length).toFixed(1);
                     const name = new Date(day).toLocaleDateString("en-US",{weekday:"short"});
-                    return `<div class="forecast-card">${name}<br>${avg}°C</div>`;
+                    return `
+                    <div class="forecast-card">
+                        ${name}<br>${avg}°C
+                    </div>`;
                 }).join("")}
             </div>
 
@@ -150,7 +154,7 @@ async function renderWeather(current, forecast){
     initSwipe();
 }
 
-/* ANIMATION (FIXED SMOOTH) */
+/* ANIMATION */
 function runAnimation(type){
     const box = document.getElementById("weatherAnimation");
     if(!box) return;
@@ -184,8 +188,9 @@ function runAnimation(type){
     });
 }
 
-/* SWIPE (MOBILE + LAPTOP FIXED) */
+/* SWIPE + DOTS (LAPTOP + MOBILE) */
 function initSwipe(){
+
     const slider = document.getElementById("slider");
     if(!slider) return;
 
@@ -193,21 +198,43 @@ function initSwipe(){
         slider.style.transform = `translateX(-${index*100}%)`;
     }
 
-    slider.onmousedown = e => startX = e.clientX;
-
-    window.onmouseup = e=>{
-        let diff = e.clientX - startX;
-        if(diff < -50) index = Math.min(index+1,2);
-        if(diff > 50) index = Math.max(index-1,0);
-        update();
+    slider.onmousedown = (e)=>{
+        isDragging = true;
+        startX = e.clientX;
     };
 
-    slider.ontouchstart = e => startX = e.touches[0].clientX;
+    window.onmousemove = (e)=>{
+        if(!isDragging) return;
 
-    slider.ontouchend = e=>{
+        let diff = e.clientX - startX;
+
+        if(diff > 80){
+            index = Math.max(index-1,0);
+            startX = e.clientX;
+            update();
+        }
+
+        if(diff < -80){
+            index = Math.min(index+1,2);
+            startX = e.clientX;
+            update();
+        }
+    };
+
+    window.onmouseup = ()=>{
+        isDragging = false;
+    };
+
+    slider.ontouchstart = (e)=>{
+        startX = e.touches[0].clientX;
+    };
+
+    slider.ontouchend = (e)=>{
         let diff = e.changedTouches[0].clientX - startX;
-        if(diff < -50) index = Math.min(index+1,2);
+
         if(diff > 50) index = Math.max(index-1,0);
+        if(diff < -50) index = Math.min(index+1,2);
+
         update();
     };
 
@@ -227,24 +254,28 @@ themeToggle.onclick = ()=>{
     document.body.classList.toggle("dark-mode");
 };
 
-/* AI FIX */
-window.fillQuestion = q=>{
+/* AI FIXED */
+window.fillQuestion = (q)=>{
     document.getElementById("aiInput").value = q;
     askAI();
 };
 
 window.askAI = ()=>{
-    const input = document.getElementById("aiInput").value.toLowerCase();
+    const input = document.getElementById("aiInput");
     const output = document.getElementById("aiOutput");
 
-    if(input.includes("temperature"))
+    if(!input || !output) return;
+
+    const text = input.value.toLowerCase();
+
+    if(text.includes("temperature"))
         output.innerText = `${currentTemp.toFixed(1)}°C`;
 
-    else if(input.includes("wear"))
+    else if(text.includes("wear"))
         output.innerText = currentTemp>32 ? "Light clothes ☀️" : "Normal clothes 🙂";
 
     else
-        output.innerText = "Ask proper weather question 😄";
+        output.innerText = "Try: temperature / wear / weather 😄";
 };
 
 /* DEFAULT LOAD */
