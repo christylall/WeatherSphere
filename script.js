@@ -18,55 +18,119 @@ document.querySelectorAll(".location-btn").forEach(btn=>{
 
 /* WEATHER ICONS */
 const weatherIcons = {
-    Clear:"☀️", Clouds:"☁️", Rain:"🌧️", Snow:"❄️",
-    Thunderstorm:"⚡", Mist:"🌫️", Haze:"🌫️", Drizzle:"🌦️"
+    Clear:"☀️", Clouds:"☁️", Rain:"🌧️",
+    Snow:"❄️", Thunderstorm:"⚡",
+    Mist:"🌫️", Haze:"🌫️", Drizzle:"🌦️"
 };
 
-/* WEATHER FETCH */
+/* AQI */
+async function getAQI(lat, lon){
+    try{
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
+        const data = await res.json();
+        return data.list[0].main.aqi;
+    }catch{
+        return "--";
+    }
+}
+
+/* CITY WEATHER */
 async function getWeather(city){
     homeSection.innerHTML = "<p>Loading weather... ⏳</p>";
 
     try{
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
-        const data = await res.json();
+        const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
+        const current = await currentRes.json();
 
-        if(data.cod !== 200){
+        if(current.cod !== 200){
             homeSection.innerHTML = "<p>City not found ❌</p>";
             return;
         }
 
-        renderWeather(data);
+        const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`);
+        const forecast = await forecastRes.json();
+
+        renderWeather(current, forecast);
+
     }catch{
-        homeSection.innerHTML = "<p>Error loading weather</p>";
+        homeSection.innerHTML = "<p>Error loading weather ❌</p>";
     }
 }
 
 /* LOCATION WEATHER */
-async function getWeatherByLocation(lat,lon){
+async function getWeatherByLocation(lat, lon){
     try{
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
-        const data = await res.json();
-        renderWeather(data);
+        const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
+        const current = await currentRes.json();
+
+        const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
+        const forecast = await forecastRes.json();
+
+        renderWeather(current, forecast);
+
     }catch{
-        homeSection.innerHTML = "<p>Location error ❌</p>";
+        getWeather("Delhi"); // fallback
     }
 }
 
 /* RENDER */
-function renderWeather(data){
-    currentWeather = data.weather[0].main;
-    currentTemp = data.main.temp;
+async function renderWeather(current, forecast){
+    currentWeather = current.weather[0].main;
+    currentTemp = current.main.temp;
+
+    const icon = weatherIcons[currentWeather] || "🌡️";
+    const aqi = await getAQI(current.coord.lat, current.coord.lon);
 
     homeSection.innerHTML = `
     <div class="current-weather">
-        <h2>📍 ${data.name}, ${data.sys.country}</h2>
-        <p style="font-size:13px;opacity:0.8;">Live location</p>
+        <h2>📍 ${current.name.includes("Belanganj") ? "Agra" : current.name}, ${current.sys.country}</h2>
         <h1>${currentTemp.toFixed(1)}°C</h1>
-        <p>${weatherIcons[currentWeather] || "🌡️"} ${data.weather[0].description}</p>
-        <p>Humidity ${data.main.humidity}%</p>
-        <p>Wind ${data.wind.speed} m/s</p>
+        <p>${icon} ${current.weather[0].description}</p>
+        <p>Humidity ${current.main.humidity}%</p>
+        <p>Wind ${current.wind.speed} m/s</p>
+    </div>
+
+    <div class="aqi-card">
+        <h3>Air Quality</h3>
+        <p>${aqi}</p>
     </div>
     `;
+
+    initSwipe(); // safe call
+}
+
+/* 🔥 FIXED SLIDER (Mobile + Laptop) */
+function initSwipe(){
+    const slider = document.getElementById("slider");
+    if(!slider) return;
+
+    let startX = 0;
+    let index = 0;
+
+    // TOUCH
+    slider.addEventListener("touchstart", e=>{
+        startX = e.touches[0].clientX;
+    });
+
+    slider.addEventListener("touchend", e=>{
+        handleSwipe(startX - e.changedTouches[0].clientX);
+    });
+
+    // MOUSE (LAPTOP FIX)
+    slider.addEventListener("mousedown", e=>{
+        startX = e.clientX;
+    });
+
+    slider.addEventListener("mouseup", e=>{
+        handleSwipe(startX - e.clientX);
+    });
+
+    function handleSwipe(diff){
+        if(diff > 50 && index < 2) index++;
+        if(diff < -50 && index > 0) index--;
+
+        slider.style.transform = `translateX(-${index * 100}%)`;
+    }
 }
 
 /* SEARCH */
@@ -80,7 +144,7 @@ themeToggle.onclick = ()=>{
     document.body.classList.toggle("dark-mode");
 };
 
-/* AUTO LOCATION */
+/* AUTO LOCATION (FIXED FLOW) */
 window.onload = ()=>{
     homeSection.innerHTML = "<p>Detecting location... 📍</p>";
 
@@ -95,6 +159,11 @@ window.onload = ()=>{
 };
 
 /* AI */
+function fillQuestion(q){
+    aiInput.value = q;
+    askAI();
+}
+
 function askAI(){
     if(!currentWeather){
         aiOutput.innerText = "Wait... loading weather ⏳";
@@ -102,7 +171,7 @@ function askAI(){
     }
 
     const q = aiInput.value.toLowerCase();
-    let ans = "Ask about temperature, clothes or health.";
+    let ans = "Ask about temperature or clothes.";
 
     if(q.includes("temperature")){
         ans = `Temperature is ${currentTemp.toFixed(1)}°C`;
@@ -112,29 +181,14 @@ function askAI(){
         else if(currentTemp<15) ans="Wear jacket 🧥";
         else ans="Normal clothes 🙂";
     }
-    else if(q.includes("disease")){
-        if(currentWeather==="Rain") ans="Risk of dengue 🦟";
-        else ans="Normal seasonal issues";
-    }
 
-    typeEffect(ans);
+    aiOutput.innerText = ans;
 }
 
-/* TYPE EFFECT */
-function typeEffect(text){
-    aiOutput.innerText="";
-    let i=0;
-    let inter = setInterval(()=>{
-        aiOutput.innerText+=text[i];
-        i++;
-        if(i>=text.length) clearInterval(inter);
-    },20);
-}
-
-/* VOICE AI */
+/* VOICE */
 function startVoice(){
     if(!('webkitSpeechRecognition' in window)){
-        alert("Not supported");
+        alert("Voice not supported");
         return;
     }
 
@@ -145,8 +199,7 @@ function startVoice(){
     aiOutput.innerText="Listening... 🎤";
 
     rec.onresult = e=>{
-        const speech = e.results[0][0].transcript;
-        aiInput.value = speech;
+        aiInput.value = e.results[0][0].transcript;
         askAI();
     };
 }
