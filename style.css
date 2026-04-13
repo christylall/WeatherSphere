@@ -25,7 +25,6 @@ color:var(--text);
 min-height:100vh;
 padding:20px;
 transition:.3s;
-overflow-x:hidden;
 }
 
 .container{
@@ -36,6 +35,7 @@ z-index:2;
 }
 
 /* HEADER */
+
 .header{
 display:flex;
 justify-content:space-between;
@@ -62,6 +62,7 @@ box-shadow:var(--shadow);
 }
 
 /* SEARCH */
+
 .search-section{
 display:flex;
 gap:10px;
@@ -73,7 +74,6 @@ flex:1;
 padding:12px;
 border-radius:var(--radius);
 border:2px solid var(--primary);
-outline:none;
 }
 
 .search-btn{
@@ -86,6 +86,7 @@ cursor:pointer;
 }
 
 /* LOCATION BUTTONS */
+
 .location-buttons{
 display:flex;
 flex-wrap:wrap;
@@ -108,6 +109,7 @@ border:none;
 }
 
 /* CURRENT WEATHER */
+
 .current-weather{
 background:linear-gradient(135deg,var(--primary),var(--secondary));
 color:white;
@@ -118,7 +120,23 @@ box-shadow:var(--shadow);
 margin-bottom:20px;
 }
 
+/* EXTRA INFO */
+
+.extra-info{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+gap:10px;
+margin-top:15px;
+}
+
+.extra-info p{
+background:rgba(255,255,255,0.25);
+padding:10px;
+border-radius:10px;
+}
+
 /* AQI */
+
 .aqi-card{
 background:linear-gradient(135deg,#27ae60,#2ecc71);
 padding:15px;
@@ -129,6 +147,7 @@ text-align:center;
 }
 
 /* HEALTH */
+
 .prevention-card{
 background:linear-gradient(135deg,#e67e22,#f39c12);
 padding:15px;
@@ -138,22 +157,20 @@ margin-bottom:20px;
 text-align:center;
 }
 
-/* SWIPE CONTAINER */
+/* SWIPE FORECAST */
+
 .swipe-container{
 overflow:hidden;
 width:100%;
 margin-top:20px;
-position:relative;
 }
 
-/* SLIDER */
 .swipe-slider{
 display:flex;
 width:300%;
 transition:transform .4s ease;
 }
 
-/* SLIDES */
 .swipe-slide{
 width:100%;
 flex-shrink:0;
@@ -161,6 +178,7 @@ padding:10px;
 }
 
 /* HOURLY */
+
 .hourly-cards{
 display:flex;
 gap:10px;
@@ -177,6 +195,7 @@ text-align:center;
 }
 
 /* TOMORROW */
+
 .tomorrow-box{
 background:linear-gradient(135deg,var(--secondary),var(--primary));
 padding:15px;
@@ -188,6 +207,7 @@ gap:6px;
 }
 
 /* FIVE DAY */
+
 .forecast-cards{
 display:flex;
 gap:10px;
@@ -203,29 +223,8 @@ text-align:center;
 min-width:90px;
 }
 
-/* DOTS (IMPORTANT) */
-.dots-container{
-text-align:center;
-margin-top:10px;
-}
-
-.dot{
-height:10px;
-width:10px;
-margin:0 5px;
-display:inline-block;
-border-radius:50%;
-background:#bbb;
-cursor:pointer;
-transition:.3s;
-}
-
-.dot.active{
-background:#333;
-transform:scale(1.2);
-}
-
 /* AI CHAT */
+
 .ai-chat{
 margin-top:30px;
 background:white;
@@ -265,7 +264,6 @@ padding:10px;
 border-radius:6px;
 border:1px solid #ccc;
 margin-bottom:10px;
-outline:none;
 }
 
 .ai-btn{
@@ -289,6 +287,7 @@ background:#3a3a55;
 }
 
 /* FOOTER */
+
 footer{
 margin-top:30px;
 text-align:center;
@@ -298,7 +297,8 @@ background:linear-gradient(135deg,var(--primary),var(--secondary));
 color:white;
 }
 
-/* BACKGROUND */
+/* WEATHER BACKGROUND */
+
 #weatherAnimation{
 position:fixed;
 top:0;
@@ -310,7 +310,8 @@ pointer-events:none;
 overflow:hidden;
 }
 
-/* CLOUD */
+/* CLOUDS */
+
 .cloud{
 position:absolute;
 width:160px;
@@ -321,20 +322,26 @@ opacity:.8;
 animation:cloudMove linear infinite;
 }
 
-.cloud::before,
+.cloud::before{
+content:"";
+position:absolute;
+width:70px;
+height:70px;
+background:white;
+border-radius:50%;
+top:-20px;
+left:25px;
+}
+
 .cloud::after{
 content:"";
 position:absolute;
+width:90px;
+height:90px;
 background:white;
 border-radius:50%;
-}
-
-.cloud::before{
-width:70px;height:70px;top:-20px;left:25px;
-}
-
-.cloud::after{
-width:90px;height:90px;top:-35px;left:60px;
+top:-35px;
+left:60px;
 }
 
 @keyframes cloudMove{
@@ -343,11 +350,13 @@ width:90px;height:90px;top:-35px;left:60px;
 }
 
 /* RAIN */
+
 .rain-drop{
 position:absolute;
 width:2px;
 height:18px;
 background:#7ec8ff;
+opacity:.8;
 animation:rainFall linear infinite;
 }
 
@@ -357,6 +366,7 @@ animation:rainFall linear infinite;
 }
 
 /* SUN */
+
 .sun{
 position:absolute;
 top:60px;
@@ -369,6 +379,7 @@ box-shadow:0 0 60px rgba(255,200,0,0.8);
 }
 
 /* SUN RAYS */
+
 .sun-rays{
 position:absolute;
 top:40px;
@@ -387,7 +398,30 @@ animation:sunPulse 4s infinite;
 }
 
 /* RESPONSIVE */
+
 @media(max-width:768px){
-.app-title{font-size:1.9rem;}
-.hour-card,.forecast-card{min-width:80px;}
+
+.app-title{
+font-size:1.9rem;
 }
+
+.hour-card,.forecast-card{
+min-width:80px;
+}
+
+}
+.ai-container{
+display:flex;
+align-items:center;
+gap:20px;
+flex-wrap:wrap;
+}
+
+.ai-image{
+width:180px;
+border-radius:15px;
+}
+
+.ai-box{
+flex:1;
+    }
