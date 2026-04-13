@@ -26,7 +26,30 @@ min-height:100vh;
 padding:20px;
 transition:.3s;
 }
+body{
+    font-family: sans-serif;
+    text-align: center;
+}
 
+.swipe-container{
+    overflow:hidden;
+    width:100%;
+}
+
+.swipe-slider{
+    display:flex;
+    transition:0.4s;
+    cursor:grab;
+}
+
+.swipe-slide{
+    min-width:100%;
+    padding:15px;
+}
+
+.swipe-slider:active{
+    cursor:grabbing;
+}
 .container{
 max-width:1100px;
 margin:auto;
