@@ -6,13 +6,12 @@ font-family:Arial;
 }
 
 body{
-background:#f2f6ff;
-color:#111;
-padding:15px;
+background:#eef3ff;
+padding:20px;
 }
 
 .container{
-max-width:900px;
+max-width:1100px;
 margin:auto;
 }
 
@@ -20,11 +19,11 @@ margin:auto;
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-bottom:15px;
+margin-bottom:20px;
 }
 
 .app-title{
-font-size:24px;
+font-size:28px;
 }
 
 .search-section{
@@ -36,135 +35,62 @@ margin-bottom:15px;
 .search-section input{
 flex:1;
 padding:10px;
-border:1px solid #ccc;
 border-radius:8px;
+border:1px solid #ccc;
 }
 
 button{
 padding:10px 15px;
-border:none;
 background:#2d6cdf;
 color:white;
+border:none;
 border-radius:8px;
 cursor:pointer;
 }
 
-.location-buttons{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-margin-bottom:15px;
-}
-
-.location-btn{
-background:#eee;
-color:#000;
-}
-
+/* WEATHER CARD */
 #homeSection{
 background:white;
-padding:15px;
-border-radius:10px;
-box-shadow:0 3px 10px rgba(0,0,0,0.1);
-margin-bottom:15px;
+padding:20px;
+border-radius:12px;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+margin-bottom:20px;
 }
 
-/* SWIPE FIX (IMPORTANT) */
-.swipe-container{
-overflow:hidden;
-width:100%;
+/* GRID FIX (LAPTOP PERFECT) */
+.weather-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:15px;
+margin-top:15px;
 }
 
-.swipe-slider{
-display:flex;
-width:300%;
-transition:0.4s ease;
-}
-
-.swipe-slide{
-width:100%;
-flex-shrink:0;
-padding:10px;
-}
-
-.forecast-card{
+.card{
 background:#2d6cdf;
 color:white;
-padding:10px;
-margin:5px;
-border-radius:8px;
-display:inline-block;
+padding:15px;
+border-radius:10px;
 }
+
+/* SWIPE */
+.swipe-container{overflow:hidden;margin-top:15px;}
+.swipe-slider{display:flex;width:300%;transition:0.4s;}
+.swipe-slide{width:100%;flex-shrink:0;padding:10px;}
 
 /* AI */
 .ai-box{
 background:white;
 padding:15px;
 border-radius:10px;
-box-shadow:0 3px 10px rgba(0,0,0,0.1);
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
 
-.ai-box input{
-width:100%;
-padding:10px;
-margin-bottom:10px;
-border:1px solid #ccc;
-border-radius:8px;
-}
-
-/* DARK MODE */
+/* DARK */
 .dark-mode{
 background:#121212;
 color:white;
 }
-
 .dark-mode #homeSection,
 .dark-mode .ai-box{
 background:#1e1e1e;
-}
-
-/* WEATHER ANIMATION */
-#weatherAnimation{
-position:fixed;
-inset:0;
-z-index:-1;
-pointer-events:none;
-}
-
-.cloud{
-position:absolute;
-width:120px;
-height:50px;
-background:white;
-border-radius:50px;
-opacity:0.7;
-animation:move 20s linear infinite;
-}
-
-@keyframes move{
-from{transform:translateX(-200px);}
-to{transform:translateX(120vw);}
-}
-
-.rain-drop{
-position:absolute;
-width:2px;
-height:15px;
-background:blue;
-animation:fall 1s linear infinite;
-}
-
-@keyframes fall{
-from{transform:translateY(-20px);}
-to{transform:translateY(120vh);}
-}
-
-.sun{
-position:absolute;
-top:50px;
-right:50px;
-width:80px;
-height:80px;
-background:yellow;
-border-radius:50%;
 }
