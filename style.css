@@ -159,7 +159,7 @@ text-align:center;
 
 /* SWIPE FORECAST */
 
-.swipe-container{
+swipe-container{
 overflow:hidden;
 width:100%;
 margin-top:20px;
