@@ -1,76 +1,36 @@
-const API_KEY = "YOUR_NEW_API_KEY"; // ⚠️ new key daalna
+const API_KEY = "da287b27ab2c62083846949656a915d4";
+
 
 const homeSection = document.getElementById("homeSection");
 const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("searchInput");
-const themeToggle = document.getElementById("themeToggle");
-const aiInput = document.getElementById("aiInput");
-const aiOutput = document.getElementById("aiOutput");
 
 let currentWeather = "";
 let currentTemp = 0;
 
-/* QUICK CITY */
-document.querySelectorAll(".location-btn").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-        getWeather(btn.dataset.location);
-    });
-});
-
 /* WEATHER ICONS */
 const weatherIcons = {
-    Clear:"☀️", Clouds:"☁️", Rain:"🌧️",
-    Snow:"❄️", Thunderstorm:"⚡",
-    Mist:"🌫️", Haze:"🌫️", Drizzle:"🌦️"
+    Clear: "☀️",
+    Clouds: "☁️",
+    Rain: "🌧️",
+    Snow: "❄️",
+    Thunderstorm: "⚡",
+    Mist: "🌫️",
+    Haze: "🌫️",
+    Drizzle: "🌦️"
 };
 
-/* AQI */
-async function getAQI(lat, lon){
-    try{
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
-        const data = await res.json();
-        return data.list[0].main.aqi;
-    }catch{
-        return "--";
-    }
-}
-
-/* CITY WEATHER */
+/* GET WEATHER */
 async function getWeather(city){
-    homeSection.innerHTML = "<p>Loading weather... ⏳</p>";
+    homeSection.innerHTML = "<p>Loading...</p>";
 
     try{
-        const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
-        const current = await currentRes.json();
-
-        if(current.cod !== 200){
-            homeSection.innerHTML = "<p>City not found ❌</p>";
-            return;
-        }
-
-        const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`);
-        const forecast = await forecastRes.json();
+        const current = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`).then(r=>r.json());
+        const forecast = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`).then(r=>r.json());
 
         renderWeather(current, forecast);
-
     }catch{
-        homeSection.innerHTML = "<p>Error loading weather ❌</p>";
-    }
-}
-
-/* LOCATION WEATHER */
-async function getWeatherByLocation(lat, lon){
-    try{
-        const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
-        const current = await currentRes.json();
-
-        const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
-        const forecast = await forecastRes.json();
-
-        renderWeather(current, forecast);
-
-    }catch{
-        getWeather("Delhi"); // fallback
+        homeSection.innerHTML = "<p>Error loading weather</p>";
     }
 }
 
@@ -80,127 +40,120 @@ async function renderWeather(current, forecast){
     currentTemp = current.main.temp;
 
     const icon = weatherIcons[currentWeather] || "🌡️";
-    const aqi = await getAQI(current.coord.lat, current.coord.lon);
+
+    /* HOURLY */
+    const hourly = forecast.list.slice(0,8);
+
+    /* DAILY */
+    const daily = {};
+    forecast.list.forEach(i=>{
+        const d = i.dt_txt.split(" ")[0];
+        if(!daily[d]) daily[d]=[];
+        daily[d].push(i);
+    });
+
+    const days = Object.keys(daily);
+    const tomorrow = days[1];
+    const fiveDays = days.slice(1,6);
 
     homeSection.innerHTML = `
-    <div class="current-weather">
-        <h2>📍 ${current.name.includes("Belanganj") ? "Agra" : current.name}, ${current.sys.country}</h2>
-        <h1>${currentTemp.toFixed(1)}°C</h1>
-        <p>${icon} ${current.weather[0].description}</p>
-        <p>Humidity ${current.main.humidity}%</p>
-        <p>Wind ${current.wind.speed} m/s</p>
-    </div>
+    <h2>${current.name}</h2>
+    <h1>${currentTemp.toFixed(1)}°C</h1>
+    <p>${icon} ${current.weather[0].description}</p>
 
-    <div class="aqi-card">
-        <h3>Air Quality</h3>
-        <p>${aqi}</p>
+    <div class="swipe-container">
+        <div class="swipe-slider" id="slider">
+
+            <!-- HOURLY -->
+            <div class="swipe-slide">
+                <h3>Today</h3>
+                ${hourly.map(h=>{
+                    const t = h.dt_txt.split(" ")[1].slice(0,5);
+                    return `<p>${t} ${weatherIcons[h.weather[0].main]} ${h.main.temp.toFixed(1)}°C</p>`;
+                }).join("")}
+            </div>
+
+            <!-- TOMORROW -->
+            <div class="swipe-slide">
+                <h3>Tomorrow</h3>
+                ${daily[tomorrow].map(t=>{
+                    const time = t.dt_txt.split(" ")[1].slice(0,5);
+                    return `<p>${time} ${weatherIcons[t.weather[0].main]} ${t.main.temp.toFixed(1)}°C</p>`;
+                }).join("")}
+            </div>
+
+            <!-- 5 DAY -->
+            <div class="swipe-slide">
+                <h3>5 Days</h3>
+                ${fiveDays.map(day=>{
+                    const avg = (daily[day].reduce((s,d)=>s+d.main.temp,0)/daily[day].length).toFixed(1);
+                    const name = new Date(day).toLocaleDateString("en-US",{weekday:"short"});
+                    return `<p>${name} ${avg}°C</p>`;
+                }).join("")}
+            </div>
+
+        </div>
     </div>
     `;
 
-    initSwipe(); // safe call
+    initSwipe();
 }
 
-/* 🔥 FIXED SLIDER (Mobile + Laptop) */
+/* 🔥 PRO SLIDER */
 function initSwipe(){
     const slider = document.getElementById("slider");
     if(!slider) return;
 
     let startX = 0;
+    let isDragging = false;
     let index = 0;
 
-    // TOUCH
-    slider.addEventListener("touchstart", e=>{
-        startX = e.touches[0].clientX;
-    });
-
-    slider.addEventListener("touchend", e=>{
-        handleSwipe(startX - e.changedTouches[0].clientX);
-    });
-
-    // MOUSE (LAPTOP FIX)
-    slider.addEventListener("mousedown", e=>{
-        startX = e.clientX;
-    });
-
-    slider.addEventListener("mouseup", e=>{
-        handleSwipe(startX - e.clientX);
-    });
-
-    function handleSwipe(diff){
-        if(diff > 50 && index < 2) index++;
-        if(diff < -50 && index > 0) index--;
-
-        slider.style.transform = `translateX(-${index * 100}%)`;
+    function setX(x){
+        slider.style.transform = `translateX(${x}px)`;
     }
+
+    function start(x){
+        isDragging = true;
+        startX = x;
+        slider.style.transition = "none";
+    }
+
+    function move(x){
+        if(!isDragging) return;
+        const diff = x - startX;
+        setX(-index*slider.offsetWidth + diff);
+    }
+
+    function end(x){
+        if(!isDragging) return;
+        isDragging = false;
+
+        const diff = x - startX;
+
+        if(diff < -80 && index < 2) index++;
+        if(diff > 80 && index > 0) index--;
+
+        slider.style.transition = "0.4s";
+        setX(-index*slider.offsetWidth);
+    }
+
+    /* TOUCH */
+    slider.addEventListener("touchstart",e=>start(e.touches[0].clientX));
+    slider.addEventListener("touchmove",e=>move(e.touches[0].clientX));
+    slider.addEventListener("touchend",e=>end(e.changedTouches[0].clientX));
+
+    /* MOUSE */
+    slider.addEventListener("mousedown",e=>start(e.clientX));
+    window.addEventListener("mousemove",e=>move(e.clientX));
+    window.addEventListener("mouseup",e=>end(e.clientX));
 }
 
 /* SEARCH */
 searchBtn.onclick = ()=>{
-    const city = searchInput.value.trim();
-    if(city) getWeather(city);
+    if(searchInput.value) getWeather(searchInput.value);
 };
 
-/* DARK MODE */
-themeToggle.onclick = ()=>{
-    document.body.classList.toggle("dark-mode");
-};
-
-/* AUTO LOCATION (FIXED FLOW) */
+/* AUTO LOAD */
 window.onload = ()=>{
-    homeSection.innerHTML = "<p>Detecting location... 📍</p>";
-
-    if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(
-            pos=> getWeatherByLocation(pos.coords.latitude,pos.coords.longitude),
-            ()=> getWeather("Delhi")
-        );
-    }else{
-        getWeather("Delhi");
-    }
+    getWeather("Delhi");
 };
-
-/* AI */
-function fillQuestion(q){
-    aiInput.value = q;
-    askAI();
-}
-
-function askAI(){
-    if(!currentWeather){
-        aiOutput.innerText = "Wait... loading weather ⏳";
-        return;
-    }
-
-    const q = aiInput.value.toLowerCase();
-    let ans = "Ask about temperature or clothes.";
-
-    if(q.includes("temperature")){
-        ans = `Temperature is ${currentTemp.toFixed(1)}°C`;
-    }
-    else if(q.includes("wear")){
-        if(currentTemp>35) ans="Wear light cotton ☀️";
-        else if(currentTemp<15) ans="Wear jacket 🧥";
-        else ans="Normal clothes 🙂";
-    }
-
-    aiOutput.innerText = ans;
-}
-
-/* VOICE */
-function startVoice(){
-    if(!('webkitSpeechRecognition' in window)){
-        alert("Voice not supported");
-        return;
-    }
-
-    const rec = new webkitSpeechRecognition();
-    rec.lang="en-IN";
-    rec.start();
-
-    aiOutput.innerText="Listening... 🎤";
-
-    rec.onresult = e=>{
-        aiInput.value = e.results[0][0].transcript;
-        askAI();
-    };
-}
