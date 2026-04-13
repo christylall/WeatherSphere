@@ -1,5 +1,6 @@
 const API_KEY = "da287b27ab2c62083846949656a915d4";
-
+/* DOM READY FIX */
+document.addEventListener("DOMContentLoaded", () => {
 
 const homeSection = document.getElementById("homeSection");
 const searchBtn = document.getElementById("searchBtn");
@@ -25,17 +26,26 @@ async function getWeather(city){
     homeSection.innerHTML = "<p>Loading...</p>";
 
     try{
-        const current = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`).then(r=>r.json());
-        const forecast = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`).then(r=>r.json());
+        const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
+        const current = await currentRes.json();
+
+        if(current.cod !== 200){
+            homeSection.innerHTML = "<p>City not found ❌</p>";
+            return;
+        }
+
+        const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`);
+        const forecast = await forecastRes.json();
 
         renderWeather(current, forecast);
+
     }catch{
-        homeSection.innerHTML = "<p>Error loading weather</p>";
+        homeSection.innerHTML = "<p>Error loading weather ❌</p>";
     }
 }
 
 /* RENDER */
-async function renderWeather(current, forecast){
+function renderWeather(current, forecast){
     currentWeather = current.weather[0].main;
     currentTemp = current.main.temp;
 
@@ -44,7 +54,7 @@ async function renderWeather(current, forecast){
     /* HOURLY */
     const hourly = forecast.list.slice(0,8);
 
-    /* DAILY */
+    /* DAILY GROUP */
     const daily = {};
     forecast.list.forEach(i=>{
         const d = i.dt_txt.split(" ")[0];
@@ -57,14 +67,16 @@ async function renderWeather(current, forecast){
     const fiveDays = days.slice(1,6);
 
     homeSection.innerHTML = `
-    <h2>${current.name}</h2>
-    <h1>${currentTemp.toFixed(1)}°C</h1>
-    <p>${icon} ${current.weather[0].description}</p>
+    <div class="current-weather">
+        <h2>${current.name}</h2>
+        <h1>${currentTemp.toFixed(1)}°C</h1>
+        <p>${icon} ${current.weather[0].description}</p>
+    </div>
 
     <div class="swipe-container">
         <div class="swipe-slider" id="slider">
 
-            <!-- HOURLY -->
+            <!-- TODAY -->
             <div class="swipe-slide">
                 <h3>Today</h3>
                 ${hourly.map(h=>{
@@ -82,7 +94,7 @@ async function renderWeather(current, forecast){
                 }).join("")}
             </div>
 
-            <!-- 5 DAY -->
+            <!-- 5 DAYS -->
             <div class="swipe-slide">
                 <h3>5 Days</h3>
                 ${fiveDays.map(day=>{
@@ -99,16 +111,17 @@ async function renderWeather(current, forecast){
     initSwipe();
 }
 
-/* 🔥 PRO SLIDER */
+/* 🔥 PRO SLIDER (MOBILE + LAPTOP PERFECT) */
 function initSwipe(){
     const slider = document.getElementById("slider");
     if(!slider) return;
 
     let startX = 0;
-    let isDragging = false;
+    let currentX = 0;
     let index = 0;
+    let isDragging = false;
 
-    function setX(x){
+    function setPosition(x){
         slider.style.transform = `translateX(${x}px)`;
     }
 
@@ -120,40 +133,47 @@ function initSwipe(){
 
     function move(x){
         if(!isDragging) return;
+        currentX = x;
         const diff = x - startX;
-        setX(-index*slider.offsetWidth + diff);
+        setPosition(-index * slider.offsetWidth + diff);
     }
 
-    function end(x){
+    function end(){
         if(!isDragging) return;
         isDragging = false;
 
-        const diff = x - startX;
+        const diff = currentX - startX;
 
         if(diff < -80 && index < 2) index++;
         if(diff > 80 && index > 0) index--;
 
-        slider.style.transition = "0.4s";
-        setX(-index*slider.offsetWidth);
+        slider.style.transition = "0.4s ease";
+        setPosition(-index * slider.offsetWidth);
     }
 
     /* TOUCH */
-    slider.addEventListener("touchstart",e=>start(e.touches[0].clientX));
-    slider.addEventListener("touchmove",e=>move(e.touches[0].clientX));
-    slider.addEventListener("touchend",e=>end(e.changedTouches[0].clientX));
+    slider.addEventListener("touchstart", e=>start(e.touches[0].clientX));
+    slider.addEventListener("touchmove", e=>move(e.touches[0].clientX));
+    slider.addEventListener("touchend", end);
 
     /* MOUSE */
-    slider.addEventListener("mousedown",e=>start(e.clientX));
-    window.addEventListener("mousemove",e=>move(e.clientX));
-    window.addEventListener("mouseup",e=>end(e.clientX));
+    slider.addEventListener("mousedown", e=>start(e.clientX));
+    window.addEventListener("mousemove", e=>move(e.clientX));
+    window.addEventListener("mouseup", end);
 }
 
 /* SEARCH */
-searchBtn.onclick = ()=>{
-    if(searchInput.value) getWeather(searchInput.value);
-};
+searchBtn.addEventListener("click", ()=>{
+    const city = searchInput.value.trim();
+    if(city) getWeather(city);
+});
+
+/* ENTER KEY */
+searchInput.addEventListener("keypress", e=>{
+    if(e.key === "Enter") searchBtn.click();
+});
 
 /* AUTO LOAD */
-window.onload = ()=>{
-    getWeather("Delhi");
-};
+getWeather("Delhi");
+
+});
