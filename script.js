@@ -7,13 +7,13 @@ const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("searchInput");
 const themeToggle = document.getElementById("themeToggle");
 
+let currentWeather = "";
+let currentTemp = 0;
+
 /* LOCATION BUTTONS */
 document.querySelectorAll(".location-btn").forEach(btn=>{
     btn.addEventListener("click",()=> getWeather(btn.dataset.location));
 });
-
-let currentWeather = "";
-let currentTemp = 0;
 
 /* ICONS */
 const weatherIcons = {
@@ -101,29 +101,36 @@ async function renderWeather(current, forecast){
     <div class="swipe-container">
         <div class="swipe-slider" id="slider">
 
+            <!-- TODAY -->
             <div class="swipe-slide">
                 <h3>Today</h3>
                 ${hourly.map(h=>{
                     const t = h.dt_txt.split(" ")[1].slice(0,5);
-                    return `<p>${t} ${weatherIcons[h.weather[0].main]} ${h.main.temp.toFixed(1)}°C</p>`;
+                    return `<div class="forecast-card">${t}<br>${weatherIcons[h.weather[0].main]} ${h.main.temp.toFixed(1)}°C</div>`;
                 }).join("")}
             </div>
 
+            <!-- TOMORROW -->
             <div class="swipe-slide">
                 <h3>Tomorrow</h3>
+                <div class="forecast-cards">
                 ${daily[tomorrow].map(t=>{
                     const time = t.dt_txt.split(" ")[1].slice(0,5);
-                    return `<p>${time} ${weatherIcons[t.weather[0].main]} ${t.main.temp.toFixed(1)}°C</p>`;
+                    return `<div class="forecast-card">${time}<br>${weatherIcons[t.weather[0].main]} ${t.main.temp.toFixed(1)}°C</div>`;
                 }).join("")}
+                </div>
             </div>
 
+            <!-- 5 DAYS -->
             <div class="swipe-slide">
                 <h3>5 Days</h3>
+                <div class="forecast-cards">
                 ${fiveDays.map(day=>{
                     const avg = (daily[day].reduce((s,d)=>s+d.main.temp,0)/daily[day].length).toFixed(1);
                     const name = new Date(day).toLocaleDateString("en-US",{weekday:"short"});
-                    return `<p>${name} ${avg}°C</p>`;
+                    return `<div class="forecast-card">${name}<br>${avg}°C</div>`;
                 }).join("")}
+                </div>
             </div>
 
         </div>
@@ -131,30 +138,26 @@ async function renderWeather(current, forecast){
     `;
 
     runAnimation(currentWeather);
-    initSwipe(); // ALWAYS re-init
+    initSwipe();
 }
 
 /* ANIMATION */
 function runAnimation(type){
     const box = document.getElementById("weatherAnimation");
-    if(!box) return;
-
     box.innerHTML = "";
 
     for(let i=0;i<5;i++){
         const c = document.createElement("div");
         c.className="cloud";
         c.style.top=(10+i*10)+"%";
-        c.style.animationDuration=(20+Math.random()*10)+"s";
         box.appendChild(c);
     }
 
     if(type==="Rain" || type==="Drizzle"){
-        for(let i=0;i<80;i++){
+        for(let i=0;i<60;i++){
             const r=document.createElement("div");
             r.className="rain-drop";
             r.style.left=Math.random()*100+"%";
-            r.style.animationDuration=(0.5+Math.random())+"s";
             box.appendChild(r);
         }
     }
@@ -170,15 +173,12 @@ function runAnimation(type){
     }
 }
 
-/* FIXED SLIDER */
+/* SLIDER FIX (WORKS BOTH PC + MOBILE) */
 function initSwipe(){
     const slider = document.getElementById("slider");
-    if(!slider) return;
-
-    let startX=0, index=0;
+    let startX = 0, index = 0;
 
     slider.onmousedown = e => startX = e.clientX;
-
     window.onmouseup = e=>{
         let diff = e.clientX - startX;
         if(diff < -50 && index < 2) index++;
@@ -187,7 +187,6 @@ function initSwipe(){
     };
 
     slider.ontouchstart = e => startX = e.touches[0].clientX;
-
     slider.ontouchend = e=>{
         let diff = e.changedTouches[0].clientX - startX;
         if(diff < -50 && index < 2) index++;
@@ -197,31 +196,34 @@ function initSwipe(){
 }
 
 /* SEARCH */
-searchBtn.onclick=()=>{
+searchBtn.onclick = ()=>{
     if(searchInput.value) getWeather(searchInput.value);
 };
 
 /* THEME */
-themeToggle.onclick=()=>{
+themeToggle.onclick = ()=>{
     document.body.classList.toggle("dark-mode");
 };
 
-/* AI */
-window.fillQuestion=q=>{
-    document.getElementById("aiInput").value=q;
-    askAI();
+/* GLOBAL AI (IMPORTANT FIX) */
+window.fillQuestion = function(q){
+    document.getElementById("aiInput").value = q;
+    window.askAI();
 };
 
-window.askAI=()=>{
-    const input=document.getElementById("aiInput").value.toLowerCase();
-    const output=document.getElementById("aiOutput");
+window.askAI = function(){
+    const input = document.getElementById("aiInput").value.toLowerCase();
+    const output = document.getElementById("aiOutput");
 
-    if(input.includes("temperature")) output.innerText=`${currentTemp}°C`;
-    else if(input.includes("wear")) output.innerText=currentTemp>32?"Light clothes":"Normal clothes";
-    else output.innerText="Ask better question 😄";
+    if(input.includes("temperature"))
+        output.innerText = `Temperature is ${currentTemp.toFixed(1)}°C`;
+    else if(input.includes("wear"))
+        output.innerText = currentTemp>32 ? "Wear light clothes ☀️" : "Normal clothes 🙂";
+    else
+        output.innerText = "Ask about weather properly 😄";
 };
 
-/* LOAD */
-getWeather("Delhi");
+/* DEFAULT LOAD FIX */
+setTimeout(()=> getWeather("Delhi"), 300);
 
 });
