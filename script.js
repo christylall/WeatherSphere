@@ -1,5 +1,6 @@
 const API_KEY = "da287b27ab2c62083846949656a915d4";
-a
+
+
 let index = 0;
 let currentTemp = 0;
 
@@ -40,31 +41,36 @@ daily[d].push(i);
 const days = Object.keys(daily);
 
 document.getElementById("homeSection").innerHTML=`
+
 <div class="current-weather">
 <h2>${current.name}</h2>
 <h1>${currentTemp}°C</h1>
 <p>${current.weather[0].main}</p>
 </div>
 
-<div class="aqi-card">AQI</div>
-<div class="prevention-card">Advice</div>
-
 <div class="swipe-wrapper">
+
 <div class="swipe-slider" id="slider">
 
 <div class="swipe-slide">
 <h3>Today</h3>
-${hourly.map(h=>`<div class="forecast-card">${h.main.temp}°C</div>`).join("")}
+${hourly.map(h=>`
+<div class="forecast-card">${h.main.temp}°C</div>
+`).join("")}
 </div>
 
 <div class="swipe-slide">
 <h3>Tomorrow</h3>
-${daily[days[1]].map(h=>`<div class="forecast-card">${h.main.temp}°C</div>`).join("")}
+${daily[days[1]].map(h=>`
+<div class="forecast-card">${h.main.temp}°C</div>
+`).join("")}
 </div>
 
 <div class="swipe-slide">
 <h3>5 Days</h3>
-${days.slice(0,5).map(d=>`<div class="forecast-card">${d}</div>`).join("")}
+${days.slice(0,5).map(d=>`
+<div class="forecast-card">${d}</div>
+`).join("")}
 </div>
 
 </div>
@@ -82,7 +88,7 @@ initSwipe();
 runAnim(current.weather[0].main);
 }
 
-/* SWIPE FIX */
+/* SWIPE FIX (MOUSE + TOUCH) */
 function initSwipe(){
 
 const slider=document.getElementById("slider");
@@ -142,7 +148,7 @@ box.appendChild(s);
 }
 }
 
-/* AI FIX */
+/* AI FIX (4 QUESTIONS WORKING) */
 window.fillQuestion=(q)=>{
 document.getElementById("aiInput").value=q;
 askAI();
@@ -152,8 +158,18 @@ window.askAI=()=>{
 let i=document.getElementById("aiInput").value.toLowerCase();
 let o=document.getElementById("aiOutput");
 
-if(i.includes("temperature")) o.innerText=currentTemp+"°C";
-else if(i.includes("wear")) o.innerText=currentTemp>30?"Light clothes":"Normal clothes";
-else if(i.includes("weather")) o.innerText="Weather shown above";
-else o.innerText="Ask properly";
+if(i.includes("temperature"))
+o.innerText=currentTemp+"°C";
+
+else if(i.includes("wear"))
+o.innerText=currentTemp>30?"Wear light clothes":"Normal clothes";
+
+else if(i.includes("weather"))
+o.innerText="Weather shown above";
+
+else if(i.includes("advice"))
+o.innerText=currentTemp>35?"Avoid heat":"All good";
+
+else
+o.innerText="Ask properly";
 };
