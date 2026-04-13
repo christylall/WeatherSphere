@@ -9,35 +9,31 @@ const themeToggle = document.getElementById("themeToggle");
 
 let currentWeather = "";
 let currentTemp = 0;
-let index = 0; // FIXED swipe reset issue
 
-/* ---------------- LOCATION ---------------- */
-document.querySelectorAll(".location-btn").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-        index = 0; // reset swipe on city change
-        getWeather(btn.dataset.location);
-    });
-});
+let index = 0;
+let startX = 0;
 
-/* ---------------- ICONS ---------------- */
+/* ICONS */
 const weatherIcons = {
     Clear:"☀️", Clouds:"☁️", Rain:"🌧️",
     Snow:"❄️", Thunderstorm:"⚡",
     Mist:"🌫️", Haze:"🌫️", Drizzle:"🌦️"
 };
 
-/* ---------------- AQI ---------------- */
+/* AQI */
 async function getAQI(lat, lon){
     try{
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
+        const res = await fetch(
+            `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`
+        );
         const data = await res.json();
-        return data.list[0].main.aqi;
+        return data.list?.[0]?.main?.aqi ?? null;
     }catch{
         return null;
     }
 }
 
-/* ---------------- WEATHER ---------------- */
+/* WEATHER */
 async function getWeather(city){
 
     homeSection.innerHTML = "<p>Loading...</p>";
@@ -63,7 +59,7 @@ async function getWeather(city){
     }
 }
 
-/* ---------------- RENDER ---------------- */
+/* RENDER */
 async function renderWeather(current, forecast){
 
     currentWeather = current.weather[0].main;
@@ -72,8 +68,12 @@ async function renderWeather(current, forecast){
     const icon = weatherIcons[currentWeather] || "🌡️";
     const aqi = await getAQI(current.coord.lat, current.coord.lon);
 
-    const hourly = forecast.list.slice(0,8);
+    let advice = "Stay hydrated 💧";
+    if(currentWeather==="Rain") advice="Carry umbrella ☔";
+    if(currentTemp>35) advice="Avoid heat 🥵";
+    if(aqi && aqi>=4) advice="Poor air quality 😷";
 
+    /* SAFE DAILY GROUP */
     const daily = {};
     forecast.list.forEach(i=>{
         const d = i.dt_txt.split(" ")[0];
@@ -81,9 +81,11 @@ async function renderWeather(current, forecast){
         daily[d].push(i);
     });
 
-    const days = Object.keys(daily);
-    const tomorrow = days[1];
-    const fiveDays = days.slice(1,6);
+    const days = Object.keys(daily).filter(Boolean);
+    const tomorrow = days.length > 1 ? days[1] : days[0];
+    const fiveDays = days.slice(0,5);
+
+    const hourly = forecast.list.slice(0,8);
 
     homeSection.innerHTML = `
     <div class="current-weather">
@@ -97,23 +99,32 @@ async function renderWeather(current, forecast){
         <p>${aqi ?? "--"}</p>
     </div>
 
+    <div class="prevention-card">
+        <h3>Advice</h3>
+        <p>${advice}</p>
+    </div>
+
     <div class="swipe-wrapper">
         <div class="swipe-slider" id="slider">
 
             <div class="swipe-slide">
                 <h3>Today</h3>
-                ${hourly.map(h=>{
-                    const t = h.dt_txt.split(" ")[1].slice(0,5);
-                    return `<div class="forecast-card">${t}<br>${weatherIcons[h.weather[0].main]} ${h.main.temp.toFixed(1)}°C</div>`;
-                }).join("")}
+                ${hourly.map(h=>`
+                    <div class="forecast-card">
+                        ${h.dt_txt.split(" ")[1].slice(0,5)}<br>
+                        ${weatherIcons[h.weather[0].main]} ${h.main.temp.toFixed(1)}°C
+                    </div>
+                `).join("")}
             </div>
 
             <div class="swipe-slide">
                 <h3>Tomorrow</h3>
-                ${daily[tomorrow].map(t=>{
-                    const time = t.dt_txt.split(" ")[1].slice(0,5);
-                    return `<div class="forecast-card">${time}<br>${weatherIcons[t.weather[0].main]} ${t.main.temp.toFixed(1)}°C</div>`;
-                }).join("")}
+                ${daily[tomorrow]?.map(t=>`
+                    <div class="forecast-card">
+                        ${t.dt_txt.split(" ")[1].slice(0,5)}<br>
+                        ${weatherIcons[t.weather[0].main]} ${t.main.temp.toFixed(1)}°C
+                    </div>
+                `).join("") || ""}
             </div>
 
             <div class="swipe-slide">
@@ -139,46 +150,44 @@ async function renderWeather(current, forecast){
     initSwipe();
 }
 
-/* ---------------- ANIMATION FIX ---------------- */
+/* ANIMATION (FIXED SMOOTH) */
 function runAnimation(type){
     const box = document.getElementById("weatherAnimation");
     if(!box) return;
 
     box.innerHTML = "";
 
-    for(let i=0;i<5;i++){
-        const c = document.createElement("div");
-        c.className="cloud";
-        c.style.top=(10+i*12)+"%";
+    requestAnimationFrame(()=>{
 
-        // FIX: real movement
-        c.style.animationDuration = (12 + Math.random()*8) + "s";
-
-        box.appendChild(c);
-    }
-
-    if(type==="Rain" || type==="Drizzle"){
-        for(let i=0;i<60;i++){
-            const r=document.createElement("div");
-            r.className="rain-drop";
-            r.style.left=Math.random()*100+"%";
-            box.appendChild(r);
+        for(let i=0;i<5;i++){
+            const c=document.createElement("div");
+            c.className="cloud";
+            c.style.top=(10+i*12)+"%";
+            box.appendChild(c);
         }
-    }
 
-    if(type==="Clear"){
-        const sun=document.createElement("div");
-        sun.className="sun";
-        box.appendChild(sun);
-    }
+        if(type==="Rain" || type==="Drizzle"){
+            for(let i=0;i<50;i++){
+                const r=document.createElement("div");
+                r.className="rain-drop";
+                r.style.left=Math.random()*100+"%";
+                box.appendChild(r);
+            }
+        }
+
+        if(type==="Clear"){
+            const sun=document.createElement("div");
+            sun.className="sun";
+            box.appendChild(sun);
+        }
+
+    });
 }
 
-/* ---------------- SWIPE FIX ---------------- */
+/* SWIPE (MOBILE + LAPTOP FIXED) */
 function initSwipe(){
     const slider = document.getElementById("slider");
     if(!slider) return;
-
-    let startX = 0;
 
     function update(){
         slider.style.transform = `translateX(-${index*100}%)`;
@@ -188,10 +197,8 @@ function initSwipe(){
 
     window.onmouseup = e=>{
         let diff = e.clientX - startX;
-
-        if(diff < -50 && index < 2) index++;
-        if(diff > 50 && index > 0) index--;
-
+        if(diff < -50) index = Math.min(index+1,2);
+        if(diff > 50) index = Math.max(index-1,0);
         update();
     };
 
@@ -199,10 +206,8 @@ function initSwipe(){
 
     slider.ontouchend = e=>{
         let diff = e.changedTouches[0].clientX - startX;
-
-        if(diff < -50 && index < 2) index++;
-        if(diff > 50 && index > 0) index--;
-
+        if(diff < -50) index = Math.min(index+1,2);
+        if(diff > 50) index = Math.max(index-1,0);
         update();
     };
 
@@ -212,34 +217,37 @@ function initSwipe(){
     };
 }
 
-/* ---------------- SEARCH ---------------- */
+/* SEARCH */
 searchBtn.onclick = ()=>{
     if(searchInput.value) getWeather(searchInput.value);
 };
 
-/* ---------------- THEME ---------------- */
+/* THEME */
 themeToggle.onclick = ()=>{
     document.body.classList.toggle("dark-mode");
 };
 
-/* ---------------- AI ---------------- */
-window.fillQuestion = function(q){
+/* AI FIX */
+window.fillQuestion = q=>{
     document.getElementById("aiInput").value = q;
     askAI();
 };
 
-window.askAI = function(){
+window.askAI = ()=>{
     const input = document.getElementById("aiInput").value.toLowerCase();
     const output = document.getElementById("aiOutput");
 
     if(input.includes("temperature"))
         output.innerText = `${currentTemp.toFixed(1)}°C`;
 
+    else if(input.includes("wear"))
+        output.innerText = currentTemp>32 ? "Light clothes ☀️" : "Normal clothes 🙂";
+
     else
-        output.innerText = "Ask weather related question 😄";
+        output.innerText = "Ask proper weather question 😄";
 };
 
-/* ---------------- DEFAULT ---------------- */
+/* DEFAULT LOAD */
 getWeather("Delhi");
 
 });
