@@ -419,3 +419,21 @@ border-radius:15px;
 .ai-box{
 flex:1;
     }
+.dots{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:10px;
+}
+
+.dots span{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:#aaa;
+    cursor:pointer;
+}
+
+.dots span:hover{
+    background:#4a90e2;
+}
