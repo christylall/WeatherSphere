@@ -1,4 +1,5 @@
-const API_KEY = "da287b27ab2c62083846949656a915d4";
+const API_KEY = "YOUR_NEW_API_KEY"; // ⚠️ new key daalna
+
 const homeSection = document.getElementById("homeSection");
 const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("searchInput");
