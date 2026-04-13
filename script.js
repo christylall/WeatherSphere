@@ -5,58 +5,68 @@ document.addEventListener("DOMContentLoaded", () => {
 const homeSection = document.getElementById("homeSection");
 const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("searchInput");
+const themeToggle = document.getElementById("themeToggle");
 
-/* QUICK CITY BUTTONS FIX */
+/* LOCATION BUTTONS */
 document.querySelectorAll(".location-btn").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-        getWeather(btn.dataset.location);
-    });
+    btn.addEventListener("click",()=> getWeather(btn.dataset.location));
 });
 
 let currentWeather = "";
 let currentTemp = 0;
 
-/* WEATHER ICONS */
+/* ICONS */
 const weatherIcons = {
-    Clear: "☀️",
-    Clouds: "☁️",
-    Rain: "🌧️",
-    Snow: "❄️",
-    Thunderstorm: "⚡",
-    Mist: "🌫️",
-    Haze: "🌫️",
-    Drizzle: "🌦️"
+    Clear:"☀️", Clouds:"☁️", Rain:"🌧️",
+    Snow:"❄️", Thunderstorm:"⚡",
+    Mist:"🌫️", Haze:"🌫️", Drizzle:"🌦️"
 };
 
-/* GET WEATHER */
+/* AQI */
+async function getAQI(lat, lon){
+    try{
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
+        const data = await res.json();
+        return data.list[0].main.aqi;
+    }catch{
+        return null;
+    }
+}
+
+/* WEATHER */
 async function getWeather(city){
     homeSection.innerHTML = "<p>Loading...</p>";
 
     try{
-        const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
-        const current = await currentRes.json();
+        const current = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`).then(r=>r.json());
 
         if(current.cod !== 200){
             homeSection.innerHTML = "<p>City not found ❌</p>";
             return;
         }
 
-        const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`);
-        const forecast = await forecastRes.json();
+        const forecast = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`).then(r=>r.json());
 
         renderWeather(current, forecast);
 
     }catch{
-        homeSection.innerHTML = "<p>Error loading weather ❌</p>";
+        homeSection.innerHTML = "<p>Error ❌</p>";
     }
 }
 
-/* RENDER WEATHER */
-function renderWeather(current, forecast){
+/* RENDER */
+async function renderWeather(current, forecast){
+
     currentWeather = current.weather[0].main;
     currentTemp = current.main.temp;
 
     const icon = weatherIcons[currentWeather] || "🌡️";
+    const aqi = await getAQI(current.coord.lat, current.coord.lon);
+
+    let advice = "Stay hydrated 💧";
+    if(currentWeather==="Rain") advice="Carry umbrella ☔";
+    if(currentTemp>35) advice="Avoid heat 🥵";
+    if(aqi && aqi>=4) advice="Poor air quality 😷";
 
     const hourly = forecast.list.slice(0,8);
 
@@ -76,6 +86,16 @@ function renderWeather(current, forecast){
         <h2>${current.name}</h2>
         <h1>${currentTemp.toFixed(1)}°C</h1>
         <p>${icon} ${current.weather[0].description}</p>
+    </div>
+
+    <div class="aqi-card">
+        <h3>AQI</h3>
+        <p>${aqi ?? "--"}</p>
+    </div>
+
+    <div class="prevention-card">
+        <h3>Advice</h3>
+        <p>${advice}</p>
     </div>
 
     <div class="swipe-container">
@@ -110,70 +130,98 @@ function renderWeather(current, forecast){
     </div>
     `;
 
-    initSwipe();
+    runAnimation(currentWeather);
+    initSwipe(); // ALWAYS re-init
 }
 
-/* 🔥 PERFECT SLIDER (MOBILE + LAPTOP) */
+/* ANIMATION */
+function runAnimation(type){
+    const box = document.getElementById("weatherAnimation");
+    if(!box) return;
+
+    box.innerHTML = "";
+
+    for(let i=0;i<5;i++){
+        const c = document.createElement("div");
+        c.className="cloud";
+        c.style.top=(10+i*10)+"%";
+        c.style.animationDuration=(20+Math.random()*10)+"s";
+        box.appendChild(c);
+    }
+
+    if(type==="Rain" || type==="Drizzle"){
+        for(let i=0;i<80;i++){
+            const r=document.createElement("div");
+            r.className="rain-drop";
+            r.style.left=Math.random()*100+"%";
+            r.style.animationDuration=(0.5+Math.random())+"s";
+            box.appendChild(r);
+        }
+    }
+
+    if(type==="Clear"){
+        const sun=document.createElement("div");
+        sun.className="sun";
+        box.appendChild(sun);
+
+        const rays=document.createElement("div");
+        rays.className="sun-rays";
+        box.appendChild(rays);
+    }
+}
+
+/* FIXED SLIDER */
 function initSwipe(){
     const slider = document.getElementById("slider");
     if(!slider) return;
 
-    let startX = 0;
-    let currentX = 0;
-    let index = 0;
-    let isDragging = false;
+    let startX=0, index=0;
 
-    function update(){
-        slider.style.transform = `translateX(-${index * 100}%)`;
-    }
+    slider.onmousedown = e => startX = e.clientX;
 
-    function start(x){
-        isDragging = true;
-        startX = x;
-    }
-
-    function move(x){
-        if(!isDragging) return;
-        currentX = x;
-    }
-
-    function end(){
-        if(!isDragging) return;
-        isDragging = false;
-
-        const diff = currentX - startX;
-
+    window.onmouseup = e=>{
+        let diff = e.clientX - startX;
         if(diff < -50 && index < 2) index++;
         if(diff > 50 && index > 0) index--;
+        slider.style.transform = `translateX(-${index*100}%)`;
+    };
 
-        update();
-    }
+    slider.ontouchstart = e => startX = e.touches[0].clientX;
 
-    /* TOUCH */
-    slider.addEventListener("touchstart", e=>start(e.touches[0].clientX));
-    slider.addEventListener("touchmove", e=>move(e.touches[0].clientX));
-    slider.addEventListener("touchend", end);
-
-    /* MOUSE (Laptop Fix) */
-    slider.addEventListener("mousedown", e=>start(e.clientX));
-    window.addEventListener("mousemove", e=>move(e.clientX));
-    window.addEventListener("mouseup", end);
-
-    update();
+    slider.ontouchend = e=>{
+        let diff = e.changedTouches[0].clientX - startX;
+        if(diff < -50 && index < 2) index++;
+        if(diff > 50 && index > 0) index--;
+        slider.style.transform = `translateX(-${index*100}%)`;
+    };
 }
 
 /* SEARCH */
-searchBtn.addEventListener("click", ()=>{
-    const city = searchInput.value.trim();
-    if(city) getWeather(city);
-});
+searchBtn.onclick=()=>{
+    if(searchInput.value) getWeather(searchInput.value);
+};
 
-/* ENTER KEY */
-searchInput.addEventListener("keypress", e=>{
-    if(e.key === "Enter") searchBtn.click();
-});
+/* THEME */
+themeToggle.onclick=()=>{
+    document.body.classList.toggle("dark-mode");
+};
 
-/* AUTO LOAD */
+/* AI */
+window.fillQuestion=q=>{
+    document.getElementById("aiInput").value=q;
+    askAI();
+};
+
+window.askAI=()=>{
+    const input=document.getElementById("aiInput").value.toLowerCase();
+    const output=document.getElementById("aiOutput");
+
+    if(input.includes("temperature")) output.innerText=`${currentTemp}°C`;
+    else if(input.includes("wear")) output.innerText=currentTemp>32?"Light clothes":"Normal clothes";
+    else output.innerText="Ask better question 😄";
+};
+
+/* LOAD */
 getWeather("Delhi");
 
 });
