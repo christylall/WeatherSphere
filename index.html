@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weather App</title>
+<title>WeatherSphere</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
@@ -14,43 +14,43 @@
 <div class="container">
 
 <header class="header">
-    <h1>Weather App</h1>
-    <button id="themeToggle">Theme</button>
+  <h1 class="app-title">WeatherSphere</h1>
+  <button id="themeToggle" class="theme-toggle">Theme</button>
 </header>
 
-<div class="search">
-    <input id="searchInput" placeholder="Enter city">
-    <button id="searchBtn">Search</button>
-</div>
+<section class="search-section">
+  <input id="searchInput" class="search-input" placeholder="Enter city">
+  <button id="searchBtn" class="search-btn">Search</button>
+</section>
 
-<div class="locations">
-    <button class="location-btn" data-location="Delhi">Delhi</button>
-    <button class="location-btn" data-location="Mumbai">Mumbai</button>
-    <button class="location-btn" data-location="Kolkata">Kolkata</button>
-    <button class="location-btn" data-location="Chennai">Chennai</button>
-</div>
+<section class="location-buttons">
+  <button class="location-btn" data-location="Delhi">Delhi</button>
+  <button class="location-btn" data-location="Mumbai">Mumbai</button>
+  <button class="location-btn" data-location="Kolkata">Kolkata</button>
+  <button class="location-btn" data-location="Chennai">Chennai</button>
+</section>
 
-<!-- OUTPUT -->
 <section id="homeSection"></section>
 
 <!-- AI -->
-<div class="ai-box">
-    <h3>AI Assistant</h3>
+<section class="ai-chat">
+<h3>AI Assistant</h3>
 
-    <div class="suggestions">
-        <button onclick="fillQuestion('temperature')">Temperature</button>
-        <button onclick="fillQuestion('what should i wear')">Wear</button>
-        <button onclick="fillQuestion('weather')">Weather</button>
-    </div>
-
-    <input id="aiInput" placeholder="Ask something...">
-    <button onclick="askAI()">Ask</button>
-
-    <p id="aiOutput"></p>
+<div class="suggestions">
+<button onclick="fillQuestion('temperature')">Temp</button>
+<button onclick="fillQuestion('wear')">Wear</button>
+<button onclick="fillQuestion('weather')">Weather</button>
+<button onclick="fillQuestion('temperature & wear')">Both</button>
 </div>
+
+<input id="aiInput" class="ai-input">
+<button onclick="askAI()" class="ai-btn">Ask</button>
+<p id="aiOutput"></p>
+
+</section>
 
 </div>
 
 <script src="script.js"></script>
 </body>
-</html>j
+</html>
