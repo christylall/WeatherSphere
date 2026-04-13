@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WeatherSphere</title>
+<title>Weather App</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
@@ -13,41 +13,34 @@
 
 <div class="container">
 
-<header class="header">
-  <h1 class="app-title">WeatherSphere</h1>
-  <button id="themeToggle" class="theme-toggle">Theme</button>
-</header>
+  <div class="header">
+    <h1 class="app-title">Weather App</h1>
+    <button id="themeToggle">Theme</button>
+  </div>
 
-<section class="search-section">
-  <input id="searchInput" class="search-input" placeholder="Enter city">
-  <button id="searchBtn" class="search-btn">Search</button>
-</section>
+  <div class="search-section">
+    <input id="searchInput" class="search-input" placeholder="Enter city">
+    <button id="searchBtn" class="search-btn">Search</button>
+  </div>
 
-<section class="location-buttons">
-  <button class="location-btn" data-location="Delhi">Delhi</button>
-  <button class="location-btn" data-location="Mumbai">Mumbai</button>
-  <button class="location-btn" data-location="Kolkata">Kolkata</button>
-  <button class="location-btn" data-location="Chennai">Chennai</button>
-</section>
+  <div id="homeSection"></div>
 
-<section id="homeSection"></section>
+  <!-- AI -->
+  <div class="ai-chat">
+    <h3>AI Assistant</h3>
 
-<!-- AI -->
-<section class="ai-chat">
-<h3>AI Assistant</h3>
+    <div class="suggestions">
+      <button onclick="fillQuestion('temperature')">Temperature?</button>
+      <button onclick="fillQuestion('wear')">What to wear?</button>
+      <button onclick="fillQuestion('weather')">Weather?</button>
+      <button onclick="fillQuestion('advice')">Advice?</button>
+    </div>
 
-<div class="suggestions">
-<button onclick="fillQuestion('temperature')">Temp</button>
-<button onclick="fillQuestion('wear')">Wear</button>
-<button onclick="fillQuestion('weather')">Weather</button>
-<button onclick="fillQuestion('temperature & wear')">Both</button>
-</div>
+    <input id="aiInput" placeholder="Ask something...">
+    <button onclick="askAI()">Ask</button>
 
-<input id="aiInput" class="ai-input">
-<button onclick="askAI()" class="ai-btn">Ask</button>
-<p id="aiOutput"></p>
-
-</section>
+    <div id="aiOutput"></div>
+  </div>
 
 </div>
 
