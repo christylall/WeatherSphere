@@ -9,10 +9,12 @@ const themeToggle = document.getElementById("themeToggle");
 
 let currentWeather = "";
 let currentTemp = 0;
+let index = 0; // FIXED swipe reset issue
 
-/* ---------------- LOCATION BUTTONS ---------------- */
+/* ---------------- LOCATION ---------------- */
 document.querySelectorAll(".location-btn").forEach(btn=>{
     btn.addEventListener("click", ()=>{
+        index = 0; // reset swipe on city change
         getWeather(btn.dataset.location);
     });
 });
@@ -37,6 +39,7 @@ async function getAQI(lat, lon){
 
 /* ---------------- WEATHER ---------------- */
 async function getWeather(city){
+
     homeSection.innerHTML = "<p>Loading...</p>";
 
     try{
@@ -69,11 +72,6 @@ async function renderWeather(current, forecast){
     const icon = weatherIcons[currentWeather] || "🌡️";
     const aqi = await getAQI(current.coord.lat, current.coord.lon);
 
-    let advice = "Stay hydrated 💧";
-    if(currentWeather==="Rain") advice="Carry umbrella ☔";
-    if(currentTemp>35) advice="Avoid heat 🥵";
-    if(aqi && aqi>=4) advice="Poor air quality 😷";
-
     const hourly = forecast.list.slice(0,8);
 
     const daily = {};
@@ -99,12 +97,6 @@ async function renderWeather(current, forecast){
         <p>${aqi ?? "--"}</p>
     </div>
 
-    <div class="prevention-card">
-        <h3>Advice</h3>
-        <p>${advice}</p>
-    </div>
-
-    <!-- SWIPE + DOTS -->
     <div class="swipe-wrapper">
         <div class="swipe-slider" id="slider">
 
@@ -135,7 +127,6 @@ async function renderWeather(current, forecast){
 
         </div>
 
-        <!-- DOTS -->
         <div class="dots">
             <span onclick="goSlide(0)"></span>
             <span onclick="goSlide(1)"></span>
@@ -148,7 +139,7 @@ async function renderWeather(current, forecast){
     initSwipe();
 }
 
-/* ---------------- ANIMATION ---------------- */
+/* ---------------- ANIMATION FIX ---------------- */
 function runAnimation(type){
     const box = document.getElementById("weatherAnimation");
     if(!box) return;
@@ -158,7 +149,11 @@ function runAnimation(type){
     for(let i=0;i<5;i++){
         const c = document.createElement("div");
         c.className="cloud";
-        c.style.top=(10+i*10)+"%";
+        c.style.top=(10+i*12)+"%";
+
+        // FIX: real movement
+        c.style.animationDuration = (12 + Math.random()*8) + "s";
+
         box.appendChild(c);
     }
 
@@ -178,9 +173,7 @@ function runAnimation(type){
     }
 }
 
-/* ---------------- SWIPE + LAPTOP SUPPORT ---------------- */
-let index = 0;
-
+/* ---------------- SWIPE FIX ---------------- */
 function initSwipe(){
     const slider = document.getElementById("slider");
     if(!slider) return;
@@ -229,7 +222,7 @@ themeToggle.onclick = ()=>{
     document.body.classList.toggle("dark-mode");
 };
 
-/* ---------------- AI FIX ---------------- */
+/* ---------------- AI ---------------- */
 window.fillQuestion = function(q){
     document.getElementById("aiInput").value = q;
     askAI();
@@ -242,14 +235,11 @@ window.askAI = function(){
     if(input.includes("temperature"))
         output.innerText = `${currentTemp.toFixed(1)}°C`;
 
-    else if(input.includes("wear"))
-        output.innerText = currentTemp>32 ? "Light clothes ☀️" : "Normal clothes 🙂";
-
     else
-        output.innerText = "Ask proper weather question 😄";
+        output.innerText = "Ask weather related question 😄";
 };
 
-/* ---------------- DEFAULT LOAD ---------------- */
+/* ---------------- DEFAULT ---------------- */
 getWeather("Delhi");
 
 });
