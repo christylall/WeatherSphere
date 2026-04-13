@@ -1,10 +1,17 @@
 const API_KEY = "da287b27ab2c62083846949656a915d4";
-/* DOM READY FIX */
+
 document.addEventListener("DOMContentLoaded", () => {
 
 const homeSection = document.getElementById("homeSection");
 const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("searchInput");
+
+/* QUICK CITY BUTTONS FIX */
+document.querySelectorAll(".location-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+        getWeather(btn.dataset.location);
+    });
+});
 
 let currentWeather = "";
 let currentTemp = 0;
@@ -44,17 +51,15 @@ async function getWeather(city){
     }
 }
 
-/* RENDER */
+/* RENDER WEATHER */
 function renderWeather(current, forecast){
     currentWeather = current.weather[0].main;
     currentTemp = current.main.temp;
 
     const icon = weatherIcons[currentWeather] || "🌡️";
 
-    /* HOURLY */
     const hourly = forecast.list.slice(0,8);
 
-    /* DAILY GROUP */
     const daily = {};
     forecast.list.forEach(i=>{
         const d = i.dt_txt.split(" ")[0];
@@ -76,7 +81,6 @@ function renderWeather(current, forecast){
     <div class="swipe-container">
         <div class="swipe-slider" id="slider">
 
-            <!-- TODAY -->
             <div class="swipe-slide">
                 <h3>Today</h3>
                 ${hourly.map(h=>{
@@ -85,7 +89,6 @@ function renderWeather(current, forecast){
                 }).join("")}
             </div>
 
-            <!-- TOMORROW -->
             <div class="swipe-slide">
                 <h3>Tomorrow</h3>
                 ${daily[tomorrow].map(t=>{
@@ -94,7 +97,6 @@ function renderWeather(current, forecast){
                 }).join("")}
             </div>
 
-            <!-- 5 DAYS -->
             <div class="swipe-slide">
                 <h3>5 Days</h3>
                 ${fiveDays.map(day=>{
@@ -111,7 +113,7 @@ function renderWeather(current, forecast){
     initSwipe();
 }
 
-/* 🔥 PRO SLIDER (MOBILE + LAPTOP PERFECT) */
+/* 🔥 PERFECT SLIDER (MOBILE + LAPTOP) */
 function initSwipe(){
     const slider = document.getElementById("slider");
     if(!slider) return;
@@ -121,21 +123,18 @@ function initSwipe(){
     let index = 0;
     let isDragging = false;
 
-    function setPosition(x){
-        slider.style.transform = `translateX(${x}px)`;
+    function update(){
+        slider.style.transform = `translateX(-${index * 100}%)`;
     }
 
     function start(x){
         isDragging = true;
         startX = x;
-        slider.style.transition = "none";
     }
 
     function move(x){
         if(!isDragging) return;
         currentX = x;
-        const diff = x - startX;
-        setPosition(-index * slider.offsetWidth + diff);
     }
 
     function end(){
@@ -144,11 +143,10 @@ function initSwipe(){
 
         const diff = currentX - startX;
 
-        if(diff < -80 && index < 2) index++;
-        if(diff > 80 && index > 0) index--;
+        if(diff < -50 && index < 2) index++;
+        if(diff > 50 && index > 0) index--;
 
-        slider.style.transition = "0.4s ease";
-        setPosition(-index * slider.offsetWidth);
+        update();
     }
 
     /* TOUCH */
@@ -156,10 +154,12 @@ function initSwipe(){
     slider.addEventListener("touchmove", e=>move(e.touches[0].clientX));
     slider.addEventListener("touchend", end);
 
-    /* MOUSE */
+    /* MOUSE (Laptop Fix) */
     slider.addEventListener("mousedown", e=>start(e.clientX));
     window.addEventListener("mousemove", e=>move(e.clientX));
     window.addEventListener("mouseup", end);
+
+    update();
 }
 
 /* SEARCH */
