@@ -3,78 +3,54 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WeatherSphere</title>
+<title>Weather App</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- 🔥 BACKGROUND ANIMATION (IMPORTANT) -->
 <div id="weatherAnimation"></div>
 
 <div class="container">
 
 <header class="header">
-  <h1 class="app-title">WeatherSphere</h1>
-  <button id="themeToggle" class="theme-toggle">Night Theme</button>
+    <h1>Weather App</h1>
+    <button id="themeToggle">Theme</button>
 </header>
 
-<section class="search-section">
-  <input type="text" id="searchInput" class="search-input" placeholder="Enter city name">
-  <button id="searchBtn" class="search-btn">Search</button>
-</section>
-
-<section class="location-buttons">
-  <button class="location-btn" data-location="Delhi">Delhi</button>
-  <button class="location-btn" data-location="Mumbai">Mumbai</button>
-  <button class="location-btn" data-location="Kolkata">Kolkata</button>
-  <button class="location-btn" data-location="Chennai">Chennai</button>
-</section>
-
-<!-- Weather Output -->
-<section id="homeSection"></section>
-
-<!-- AI Chat Section -->
-<section class="ai-chat">
-
-<h3>🤖 WeatherSphere AI</h3>
-
-<div class="suggestions">
-<p>Try asking:</p>
-
-<button onclick="fillQuestion('What is the temperature here?')">
-Temperature Here
-</button>
-
-<button onclick="fillQuestion('What should I wear in this weather?')">
-Dress Suggestion
-</button>
-
-<button onclick="fillQuestion('Which crop grows best in this weather?')">
-Best Crop
-</button>
-
-<button onclick="fillQuestion('What disease can occur in this weather?')">
-Disease Risk
-</button>
+<div class="search">
+    <input id="searchInput" placeholder="Enter city">
+    <button id="searchBtn">Search</button>
 </div>
 
-<!-- ✅ FIXED INPUT -->
-<input id="aiInput" class="ai-input" placeholder="Ask weather related question...">
+<div class="locations">
+    <button class="location-btn" data-location="Delhi">Delhi</button>
+    <button class="location-btn" data-location="Mumbai">Mumbai</button>
+    <button class="location-btn" data-location="Kolkata">Kolkata</button>
+    <button class="location-btn" data-location="Chennai">Chennai</button>
+</div>
 
-<button class="ai-btn" onclick="askAI()">Ask AI</button>
+<!-- OUTPUT -->
+<section id="homeSection"></section>
 
-<p id="aiOutput" class="ai-output"></p>
+<!-- AI -->
+<div class="ai-box">
+    <h3>AI Assistant</h3>
 
-</section>
+    <div class="suggestions">
+        <button onclick="fillQuestion('temperature')">Temperature</button>
+        <button onclick="fillQuestion('what should i wear')">Wear</button>
+        <button onclick="fillQuestion('weather')">Weather</button>
+    </div>
 
-<footer>
-  <p>WeatherSphere © 2025 | Developed by Christy Lall</p>
-</footer>
+    <input id="aiInput" placeholder="Ask something...">
+    <button onclick="askAI()">Ask</button>
+
+    <p id="aiOutput"></p>
+</div>
 
 </div>
 
 <script src="script.js"></script>
-
 </body>
-</html>
+</html>j
