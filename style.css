@@ -1,153 +1,96 @@
-const API_KEY = "YOUR_NEW_API_KEY_HERE"; // 👈 new key daalna
-
-const homeSection = document.getElementById("homeSection");
-const searchBtn = document.getElementById("searchBtn");
-const searchInput = document.getElementById("searchInput");
-const themeToggle = document.getElementById("themeToggle");
-const aiInput = document.getElementById("aiInput");
-const aiOutput = document.getElementById("aiOutput");
-
-let currentWeather = "";
-let currentTemp = 0;
-
-/* QUICK CITY */
-document.querySelectorAll(".location-btn").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-        getWeather(btn.dataset.location);
-    });
-});
-
-/* WEATHER ICONS */
-const weatherIcons = {
-    Clear:"☀️", Clouds:"☁️", Rain:"🌧️", Snow:"❄️",
-    Thunderstorm:"⚡", Mist:"🌫️", Haze:"🌫️", Drizzle:"🌦️"
-};
-
-/* WEATHER FETCH */
-async function getWeather(city){
-    homeSection.innerHTML = "<p>Loading weather... ⏳</p>";
-
-    try{
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
-        const data = await res.json();
-
-        if(data.cod !== 200){
-            homeSection.innerHTML = "<p>City not found ❌</p>";
-            return;
-        }
-
-        renderWeather(data);
-    }catch{
-        homeSection.innerHTML = "<p>Error loading weather</p>";
-    }
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:sans-serif;
 }
 
-/* LOCATION WEATHER */
-async function getWeatherByLocation(lat,lon){
-    try{
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
-        const data = await res.json();
-        renderWeather(data);
-    }catch{
-        homeSection.innerHTML = "<p>Location error ❌</p>";
-    }
+body{
+background:#f4f6f8;
+color:#333;
+padding:20px;
+transition:0.3s;
 }
 
-/* RENDER */
-function renderWeather(data){
-    currentWeather = data.weather[0].main;
-    currentTemp = data.main.temp;
-
-    homeSection.innerHTML = `
-    <div class="current-weather">
-        <h2>📍 ${data.name}, ${data.sys.country}</h2>
-        <p style="font-size:13px;opacity:0.8;">Live location</p>
-        <h1>${currentTemp.toFixed(1)}°C</h1>
-        <p>${weatherIcons[currentWeather] || "🌡️"} ${data.weather[0].description}</p>
-        <p>Humidity ${data.main.humidity}%</p>
-        <p>Wind ${data.wind.speed} m/s</p>
-    </div>
-    `;
+body.dark-mode{
+background:#1b1b2f;
+color:white;
 }
 
-/* SEARCH */
-searchBtn.onclick = ()=>{
-    const city = searchInput.value.trim();
-    if(city) getWeather(city);
-};
-
-/* DARK MODE */
-themeToggle.onclick = ()=>{
-    document.body.classList.toggle("dark-mode");
-};
-
-/* AUTO LOCATION */
-window.onload = ()=>{
-    homeSection.innerHTML = "<p>Detecting location... 📍</p>";
-
-    if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(
-            pos=> getWeatherByLocation(pos.coords.latitude,pos.coords.longitude),
-            ()=> getWeather("Delhi")
-        );
-    }else{
-        getWeather("Delhi");
-    }
-};
-
-/* AI */
-function askAI(){
-    if(!currentWeather){
-        aiOutput.innerText = "Wait... loading weather ⏳";
-        return;
-    }
-
-    const q = aiInput.value.toLowerCase();
-    let ans = "Ask about temperature, clothes or health.";
-
-    if(q.includes("temperature")){
-        ans = `Temperature is ${currentTemp.toFixed(1)}°C`;
-    }
-    else if(q.includes("wear")){
-        if(currentTemp>35) ans="Wear light cotton ☀️";
-        else if(currentTemp<15) ans="Wear jacket 🧥";
-        else ans="Normal clothes 🙂";
-    }
-    else if(q.includes("disease")){
-        if(currentWeather==="Rain") ans="Risk of dengue 🦟";
-        else ans="Normal seasonal issues";
-    }
-
-    typeEffect(ans);
+.container{
+max-width:500px;
+margin:auto;
 }
 
-/* TYPE EFFECT */
-function typeEffect(text){
-    aiOutput.innerText="";
-    let i=0;
-    let inter = setInterval(()=>{
-        aiOutput.innerText+=text[i];
-        i++;
-        if(i>=text.length) clearInterval(inter);
-    },20);
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
 }
 
-/* VOICE AI */
-function startVoice(){
-    if(!('webkitSpeechRecognition' in window)){
-        alert("Not supported");
-        return;
-    }
+.app-title{
+font-size:1.8rem;
+}
 
-    const rec = new webkitSpeechRecognition();
-    rec.lang="en-IN";
-    rec.start();
+button{
+padding:10px;
+border:none;
+border-radius:8px;
+background:#4a90e2;
+color:white;
+cursor:pointer;
+}
 
-    aiOutput.innerText="Listening... 🎤";
+.search-section{
+display:flex;
+gap:10px;
+margin-bottom:20px;
+}
 
-    rec.onresult = e=>{
-        const speech = e.results[0][0].transcript;
-        aiInput.value = speech;
-        askAI();
-    };
+input{
+flex:1;
+padding:10px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+.current-weather{
+background:#4a90e2;
+color:white;
+padding:20px;
+border-radius:10px;
+text-align:center;
+}
+
+.ai-box{
+margin-top:20px;
+padding:15px;
+border-radius:10px;
+background:white;
+}
+
+body.dark-mode .ai-box{
+background:#2a2a40;
+}
+
+.ai-controls{
+display:flex;
+gap:10px;
+margin-bottom:10px;
+}
+
+#aiOutput{
+background:#eee;
+padding:10px;
+border-radius:8px;
+}
+
+body.dark-mode #aiOutput{
+background:#3a3a55;
+}
+
+footer{
+text-align:center;
+margin-top:20px;
 }
