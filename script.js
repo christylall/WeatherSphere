@@ -10,29 +10,36 @@ const aiOutput = document.getElementById("aiOutput");
 let currentWeather = "";
 let currentTemp = 0;
 
-/* GLOBAL AI */
-window.fillQuestion = function(q){
-    aiInput.value = q;
-    askAI();
-};
-window.askAI = askAI;
+/* ✅ LOCATION BUTTONS FIX */
+document.querySelectorAll(".location-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+        getWeather(btn.dataset.location);
+    });
+});
 
-/* ICONS */
+/* WEATHER ICONS */
 const weatherIcons={
-    Clear:"☀️", Clouds:"☁️", Rain:"🌧️", Snow:"❄️",
-    Thunderstorm:"⚡", Mist:"🌫️", Haze:"🌫️", Drizzle:"🌦️"
+    Clear:"☀️", Clouds:"☁️", Rain:"🌧️", Snow:"❄️"
 };
 
-/* WEATHER */
+/* WEATHER FETCH */
 async function getWeather(city){
-    homeSection.innerHTML="🔍 Loading...";
-    try{
-        const current=await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`).then(r=>r.json());
-        if(current.cod!==200) return homeSection.innerHTML="❌ City not found";
+    if(!city) return;
 
-        const forecast=await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`).then(r=>r.json());
+    homeSection.innerHTML="🔍 Loading...";
+
+    try{
+        const current = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`).then(r=>r.json());
+
+        if(current.cod !== 200){
+            homeSection.innerHTML="❌ City not found";
+            return;
+        }
+
+        const forecast = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`).then(r=>r.json());
 
         renderWeather(current,forecast);
+
     }catch{
         homeSection.innerHTML="⚠️ Error";
     }
@@ -41,13 +48,14 @@ async function getWeather(city){
 /* RENDER */
 function renderWeather(current,forecast){
 
-    currentWeather=current.weather[0].main;
-    currentTemp=current.main.temp;
+    currentWeather = current.weather[0].main;
+    currentTemp = current.main.temp;
 
-    const icon=weatherIcons[currentWeather]||"🌡️";
-    const hourly=forecast.list.slice(0,8);
+    const icon = weatherIcons[currentWeather] || "🌡️";
 
-    homeSection.innerHTML=`
+    const hourly = forecast.list.slice(0,8);
+
+    homeSection.innerHTML = `
     <div class="current-weather">
         <h2>📍 ${current.name}</h2>
         <h1>${currentTemp.toFixed(1)}°C</h1>
@@ -59,17 +67,23 @@ function renderWeather(current,forecast){
 
             <div class="swipe-slide">
                 <h3>⏰ Hourly</h3>
-                ${hourly.map(h=>`<p>${h.dt_txt.slice(11,16)} → ${h.main.temp.toFixed(0)}°C</p>`).join("")}
+                ${hourly.map(h=>`
+                    <p>${h.dt_txt.slice(11,16)} → ${h.main.temp.toFixed(0)}°C</p>
+                `).join("")}
             </div>
 
             <div class="swipe-slide">
                 <h3>🌅 Tomorrow</h3>
-                ${forecast.list.slice(8,16).map(t=>`<p>${t.dt_txt.slice(11,16)} → ${t.main.temp.toFixed(0)}°C</p>`).join("")}
+                ${forecast.list.slice(8,16).map(t=>`
+                    <p>${t.dt_txt.slice(11,16)} → ${t.main.temp.toFixed(0)}°C</p>
+                `).join("")}
             </div>
 
             <div class="swipe-slide">
                 <h3>📅 5 Days</h3>
-                ${forecast.list.filter((_,i)=>i%8===0).map(d=>`<p>${d.dt_txt.slice(0,10)} → ${d.main.temp.toFixed(0)}°C</p>`).join("")}
+                ${forecast.list.filter((_,i)=>i%8===0).map(d=>`
+                    <p>${d.dt_txt.slice(0,10)} → ${d.main.temp.toFixed(0)}°C</p>
+                `).join("")}
             </div>
 
         </div>
@@ -79,7 +93,7 @@ function renderWeather(current,forecast){
     initSwipe();
 }
 
-/* 🔥 PERFECT SWIPE (MOBILE + LAPTOP) */
+/* ✅ PERFECT SWIPE */
 function initSwipe(){
     const slider = document.getElementById("slider");
 
@@ -130,9 +144,10 @@ function initSwipe(){
 searchBtn.onclick=()=>getWeather(searchInput.value);
 searchInput.onkeypress=e=>{if(e.key==="Enter") searchBtn.click();};
 
-/* DARK MODE FIX */
+/* THEME FIX */
 themeToggle.onclick=()=>{
     document.body.classList.toggle("dark-mode");
+
     themeToggle.innerText = document.body.classList.contains("dark-mode")
         ? "☀️ Day Mode"
         : "🌙 Night Theme";
@@ -149,7 +164,6 @@ function askAI(){
 
     if(q.includes("temp"))
         aiOutput.innerText=`🌡️ ${currentTemp}°C`;
-
     else
         aiOutput.innerText="Try: temp 🌡️";
 }
