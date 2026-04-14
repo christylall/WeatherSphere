@@ -12,7 +12,7 @@ let currentTemp = 0;
 
 /* LOCATION BUTTONS */
 document.querySelectorAll(".location-btn").forEach(btn => {
-    btn.onclick = () => getWeather(btn.dataset.location);
+    btn.addEventListener("click", () => getWeather(btn.dataset.location));
 });
 
 /* ICONS */
@@ -34,7 +34,7 @@ async function getAQI(lat, lon) {
             `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`
         );
         const data = await res.json();
-        return data?.list?.[0]?.main?.aqi || "--";
+        return data?.list?.[0]?.main?.aqi ?? "--";
     } catch {
         return "--";
     }
@@ -42,6 +42,8 @@ async function getAQI(lat, lon) {
 
 /* WEATHER */
 async function getWeather(city) {
+    if (!city) return;
+
     homeSection.innerHTML = "🔍 Loading...";
 
     try {
@@ -50,7 +52,7 @@ async function getWeather(city) {
         );
         const current = await currentRes.json();
 
-        if (!current || current.cod !== 200) {
+        if (current.cod !== 200) {
             homeSection.innerHTML = "❌ City not found";
             return;
         }
@@ -71,7 +73,7 @@ async function getWeather(city) {
 /* RENDER */
 async function renderWeather(current, forecast) {
 
-    currentWeather = current.weather[0].main;
+    currentWeather = current.weather?.[0]?.main || "Clear";
     currentTemp = current.main.temp;
 
     const icon = weatherIcons[currentWeather] || "🌡️";
@@ -91,10 +93,10 @@ async function renderWeather(current, forecast) {
     /* HOURLY */
     const hourly = forecast.list.slice(0, 8);
 
-    /* TOMORROW (next 8 entries) */
+    /* TOMORROW */
     const tomorrow = forecast.list.slice(8, 16);
 
-    /* 5 DAY FIX (group by date) */
+    /* 5 DAYS (safe grouping) */
     const dailyMap = {};
     forecast.list.forEach(item => {
         const date = item.dt_txt.split(" ")[0];
@@ -150,7 +152,9 @@ async function renderWeather(current, forecast) {
     `;
 
     runAnimation(currentWeather);
-    initSwipe();
+
+    // IMPORTANT FIX: re-init after DOM render
+    setTimeout(initSwipe, 100);
 }
 
 /* ANIMATION */
@@ -166,7 +170,7 @@ function runAnimation(type) {
     }
 
     if (type === "Rain") {
-        for (let i = 0; i < 80; i++) {
+        for (let i = 0; i < 60; i++) {
             const r = document.createElement("div");
             r.className = "rain-drop";
             r.style.left = Math.random() * 100 + "%";
@@ -191,7 +195,7 @@ function runAnimation(type) {
     }
 }
 
-/* SWIPE */
+/* SWIPE FIX (IMPORTANT IMPROVEMENT) */
 function initSwipe() {
     const slider = document.getElementById("slider");
     if (!slider) return;
@@ -200,6 +204,7 @@ function initSwipe() {
     let index = 0;
 
     slider.ontouchstart = e => startX = e.touches[0].clientX;
+
     slider.ontouchend = e => {
         let diff = startX - e.changedTouches[0].clientX;
 
@@ -210,6 +215,7 @@ function initSwipe() {
     };
 
     slider.onmousedown = e => startX = e.clientX;
+
     slider.onmouseup = e => {
         let diff = startX - e.clientX;
 
@@ -236,15 +242,25 @@ window.onload = () => {
     getWeather("Delhi");
 };
 
-/* AI */
+/* AI (UPGRADED) */
 function askAI() {
-    const q = aiInput.value.toLowerCase();
+    const q = aiInput.value.toLowerCase().trim();
+
+    if (!q) {
+        aiOutput.innerText = "❌ Please ask something";
+        return;
+    }
 
     if (q.includes("temp")) {
         aiOutput.innerText = `🌡️ ${currentTemp}°C`;
-    } else if (q.includes("weather")) {
+    }
+    else if (q.includes("weather")) {
         aiOutput.innerText = `🌤️ ${currentWeather}`;
-    } else {
-        aiOutput.innerText = "Try: temp / weather";
+    }
+    else if (q.includes("aqi")) {
+        aiOutput.innerText = "🌫️ AQI shown in weather card above";
+    }
+    else {
+        aiOutput.innerText = "Try: temp / weather / aqi";
     }
 }
