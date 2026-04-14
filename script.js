@@ -11,7 +11,7 @@ let currentWeather = "";
 let currentTemp = 0;
 let index = 0;
 
- /* WEATHER BUTTONS */
+/* BUTTONS */
 document.querySelectorAll(".location-btn").forEach(btn => {
     btn.onclick = () => getWeather(btn.dataset.location);
 });
@@ -28,19 +28,41 @@ const weatherIcons = {
     Drizzle:"🌦️"
 };
 
-/* WEATHER */
+/* SEARCH CLICK */
+searchBtn.onclick = () => {
+    if(searchInput.value.trim()) {
+        getWeather(searchInput.value.trim());
+    }
+};
+
+/* ENTER KEY SUPPORT */
+searchInput.addEventListener("keypress", e => {
+    if(e.key === "Enter") searchBtn.click();
+});
+
+/* WEATHER FETCH */
 async function getWeather(city){
     homeSection.innerHTML = "Loading...";
 
-    const current = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
-    ).then(r=>r.json());
+    try {
+        const current = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
+        ).then(r=>r.json());
 
-    const forecast = await fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`
-    ).then(r=>r.json());
+        const forecast = await fetch(
+            `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`
+        ).then(r=>r.json());
 
-    renderWeather(current, forecast);
+        if(!current || current.cod !== 200){
+            homeSection.innerHTML = "City not found ❌";
+            return;
+        }
+
+        renderWeather(current, forecast);
+
+    } catch {
+        homeSection.innerHTML = "Error fetching data ⚠️";
+    }
 }
 
 /* RENDER */
@@ -55,8 +77,8 @@ function renderWeather(current, forecast){
 
     const daily = {};
     forecast.list.forEach(i=>{
-        const d=i.dt_txt.split(" ")[0];
-        if(!daily[d]) daily[d]=[];
+        const d = i.dt_txt.split(" ")[0];
+        if(!daily[d]) daily[d] = [];
         daily[d].push(i);
     });
 
@@ -64,7 +86,7 @@ function renderWeather(current, forecast){
 
     homeSection.innerHTML = `
     <div class="current-weather">
-        <h2>${current.name}</h2>
+        <h2>📍 ${current.name}</h2>
         <h1>${currentTemp.toFixed(1)}°C</h1>
         <p>${icon} ${current.weather[0].description}</p>
     </div>
@@ -73,21 +95,21 @@ function renderWeather(current, forecast){
         <div class="swipe-slider" id="slider">
 
             <div class="swipe-slide">
-                <h3>Hourly</h3>
+                <h3>Hourly ⏰</h3>
                 ${hourly.map(h=>`
                     <p>${h.dt_txt.slice(11,16)} → ${h.main.temp.toFixed(0)}°C</p>
                 `).join("")}
             </div>
 
             <div class="swipe-slide">
-                <h3>Tomorrow</h3>
+                <h3>Tomorrow 🌅</h3>
                 ${daily[days[1]]?.map(t=>`
                     <p>${t.dt_txt.slice(11,16)} → ${t.main.temp.toFixed(0)}°C</p>
                 `).join("") || "No data"}
             </div>
 
             <div class="swipe-slide">
-                <h3>5 Days</h3>
+                <h3>5 Days 📅</h3>
                 ${days.slice(0,5).map(d=>`
                     <p>${d} → ${daily[d][0].main.temp.toFixed(0)}°C</p>
                 `).join("")}
@@ -103,60 +125,56 @@ function renderWeather(current, forecast){
     runAnimation(currentWeather);
 }
 
-/* SWIPE */
+/* SWIPE FIX */
 function initSwipe(){
     const slider = document.getElementById("slider");
     if(!slider) return;
 
     let startX = 0;
 
-    slider.ontouchstart = e => startX = e.touches[0].clientX;
+    const move = (diff)=>{
+        if(diff > 50 && index < 2) index++;
+        if(diff < -50 && index > 0) index--;
 
-    slider.ontouchend = e=>{
-        let diff = startX - e.changedTouches[0].clientX;
-        move(diff);
+        slider.style.transform = `translateX(-${index*100}%)`;
+        updateDots(index);
     };
+
+    slider.ontouchstart = e => startX = e.touches[0].clientX;
+    slider.ontouchend = e => move(startX - e.changedTouches[0].clientX);
 
     slider.onmousedown = e => startX = e.clientX;
-
-    slider.onmouseup = e=>{
-        let diff = startX - e.clientX;
-        move(diff);
-    };
+    slider.onmouseup = e => move(startX - e.clientX);
 }
 
-function move(diff){
-    if(diff > 50 && index < 2) index++;
-    if(diff < -50 && index > 0) index--;
-
-    document.getElementById("slider").style.transform =
-        `translateX(-${index*100}%)`;
-
-    updateDots(index);
-}
-
-/* DOTS */
+/* DOTS FIX */
 function goSlide(i){
     index = i;
     document.getElementById("slider").style.transform =
         `translateX(-${index*100}%)`;
-    updateDots(index);
+    updateDots(i);
 }
 
 function updateDots(i){
     document.querySelectorAll(".dot").forEach((d,idx)=>{
-        d.classList.toggle("active", idx===i);
+        d.classList.toggle("active", idx === i);
     });
 }
 
-/* AI BUTTONS */
+/* AI FIX (MAIN ISSUE WAS HERE) */
 function fillQuestion(q){
     aiInput.value = q;
     askAI();
 }
 
 function askAI(){
+
     const q = aiInput.value.toLowerCase();
+
+    if(!currentWeather){
+        aiOutput.innerText = "⚠️ Pehle weather search karo";
+        return;
+    }
 
     if(q.includes("temp")){
         aiOutput.innerText = `${currentTemp}°C`;
@@ -165,26 +183,34 @@ function askAI(){
         aiOutput.innerText = currentTemp > 30 ? "Light clothes ☀️" : "Jacket 🧥";
     }
     else if(q.includes("crop")){
-        aiOutput.innerText = "Wheat / Rice 🌾";
+        aiOutput.innerText = currentWeather === "Rain" ? "Rice 🌾" : "Wheat 🌾";
     }
     else if(q.includes("disease")){
-        aiOutput.innerText = "Cold / mosquito risk 🦟";
+        aiOutput.innerText = currentWeather === "Rain" ? "Mosquito risk 🦟" : "Low risk 🙂";
     }
     else{
-        aiOutput.innerText = "Try temp / wear / crop / disease";
+        aiOutput.innerText = "Try: temp / wear / crop / disease";
     }
 }
 
-/* THEME */
+/* THEME FIX */
 themeToggle.onclick = ()=>{
     document.body.classList.toggle("dark-mode");
 };
 
-/* DEFAULT */
+/* DEFAULT LOAD */
 window.onload = ()=>getWeather("Delhi");
 
-/* ANIMATION */
+/* ANIMATION SAFE */
 function runAnimation(type){
     const box = document.getElementById("weatherAnimation");
+    if(!box) return;
+
     box.innerHTML = "";
+
+    if(type === "Clear"){
+        const sun = document.createElement("div");
+        sun.className = "sun";
+        box.appendChild(sun);
+    }
 }
