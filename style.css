@@ -612,3 +612,26 @@ animation:sunPulse 4s infinite;
 .current-weather h1{
     font-size: 3rem;
 }
+.current-weather,
+.aqi-card,
+.prevention-card,
+.swipe-container{
+position:relative;
+z-index:2;
+}
+.extra-info{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+gap:10px;
+margin-top:15px;
+z-index:2;
+}
+
+.extra-info p{
+background:rgba(0,0,0,0.2); /* CHANGE */
+color:white;
+font-weight:600;
+padding:10px;
+border-radius:10px;
+text-align:center;
+}
