@@ -1,5 +1,6 @@
 const API_KEY = "da287b27ab2c62083846949656a915d4";
 
+/* ELEMENTS */
 const homeSection = document.getElementById("homeSection");
 const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("searchInput");
@@ -7,6 +8,7 @@ const themeToggle = document.getElementById("themeToggle");
 const aiInput = document.getElementById("aiInput");
 const aiOutput = document.getElementById("aiOutput");
 
+/* STATE */
 let index = 0;
 let currentTemp = 0;
 let currentWeather = "";
@@ -18,7 +20,7 @@ document.querySelectorAll(".location-btn").forEach(btn => {
     btn.onclick = () => getWeather(btn.dataset.location);
 });
 
-/* ICONS */
+/* WEATHER ICONS */
 const icons = {
     Clear:"☀️",
     Clouds:"☁️",
@@ -30,12 +32,12 @@ const icons = {
     Drizzle:"🌦️"
 };
 
-/* WEATHER */
+/* GET WEATHER */
 async function getWeather(city){
 
     if(!city) return;
 
-    homeSection.innerHTML = "Loading...";
+    homeSection.innerHTML = "<p>Loading...</p>";
 
     try{
 
@@ -43,8 +45,8 @@ async function getWeather(city){
             `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
         ).then(r=>r.json());
 
-        if(!current || current.cod !== 200){
-            homeSection.innerHTML = "City not found ❌";
+        if(current.cod !== 200){
+            homeSection.innerHTML = "<p>City not found ❌</p>";
             return;
         }
 
@@ -55,24 +57,24 @@ async function getWeather(city){
         render(current, forecast);
 
     }catch(err){
-        homeSection.innerHTML = "Error loading data ⚠️";
+        homeSection.innerHTML = "<p>Error loading data ⚠️</p>";
     }
 }
 
-/* AQI SAFE */
+/* AQI */
 async function getAQI(lat, lon){
     try{
         const res = await fetch(
             `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`
         );
         const data = await res.json();
-        return data?.list?.[0]?.main?.aqi ?? "--";
+        return data?.list?.[0]?.main?.aqi ?? 1;
     }catch{
-        return "--";
+        return 1;
     }
 }
 
-/* RENDER */
+/* RENDER UI */
 async function render(current, forecast){
 
     currentTemp = current.main.temp;
@@ -93,7 +95,6 @@ async function render(current, forecast){
 
     const days = Object.keys(daily);
 
-    /* AQI */
     const aqi = await getAQI(current.coord.lat, current.coord.lon);
 
     let aqiText = "Good 😊";
@@ -145,6 +146,13 @@ async function render(current, forecast){
 
         </div>
     </div>
+
+    <!-- DOTS -->
+    <div class="dots">
+        <span class="dot active" onclick="goSlide(0)"></span>
+        <span class="dot" onclick="goSlide(1)"></span>
+        <span class="dot" onclick="goSlide(2)"></span>
+    </div>
     `;
 
     index = 0;
@@ -153,7 +161,7 @@ async function render(current, forecast){
     runAnimation(currentWeather);
 }
 
-/* SWIPE FIX */
+/* SWIPE */
 function initSwipe(){
     const slider = document.getElementById("slider");
     if(!slider) return;
@@ -168,24 +176,29 @@ function initSwipe(){
 }
 
 function move(diff){
+
     if(diff > 60 && index < 2) index++;
     if(diff < -60 && index > 0) index--;
 
-    document.getElementById("slider").style.transform =
-        `translateX(-${index * 100}%)`;
+    updateSlider();
+}
 
+/* DOT CLICK */
+function goSlide(i){
+    index = i;
+    updateSlider();
+}
+
+/* UPDATE SLIDER */
+function updateSlider(){
+    const slider = document.getElementById("slider");
+    if(!slider) return;
+
+    slider.style.transform = `translateX(-${index * 100}%)`;
     updateDots(index);
 }
 
-/* DOTS */
-function goSlide(i){
-    index = i;
-    document.getElementById("slider").style.transform =
-        `translateX(-${index * 100}%)`;
-
-    updateDots(i);
-}
-
+/* DOT UI */
 function updateDots(i){
     document.querySelectorAll(".dot").forEach((d,idx)=>{
         d.classList.toggle("active", idx === i);
@@ -199,6 +212,7 @@ function fillQuestion(q){
 }
 
 function askAI(){
+
     const q = aiInput.value.toLowerCase();
 
     if(!currentTemp){
@@ -228,7 +242,7 @@ themeToggle.onclick = () => {
     document.body.classList.toggle("dark-mode");
 };
 
-/* DEFAULT LOAD */
+/* DEFAULT */
 window.onload = () => getWeather("Delhi");
 
 /* ANIMATION */
