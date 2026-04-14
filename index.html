@@ -5,127 +5,64 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WeatherSphere</title>
-
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- BACKGROUND ANIMATION -->
 <div id="weatherAnimation"></div>
 
 <div class="container">
 
-    <!-- HEADER -->
-    <header class="header">
-        <h1 class="app-title">WeatherSphere</h1>
+<header class="header">
+<h1 class="app-title">WeatherSphere</h1>
+<button id="themeToggle" class="theme-toggle">🌙 Theme</button>
+</header>
 
-        <button id="themeToggle" class="theme-toggle">
-            🌙 Night Theme
-        </button>
-    </header>
+<section class="search-section">
+<input type="text" id="searchInput" class="search-input" placeholder="Enter city">
+<button id="searchBtn" class="search-btn">Search</button>
+</section>
 
-    <!-- SEARCH -->
-    <section class="search-section">
+<section class="location-buttons">
+<button class="location-btn" data-location="Delhi">Delhi</button>
+<button class="location-btn" data-location="Mumbai">Mumbai</button>
+<button class="location-btn" data-location="Kolkata">Kolkata</button>
+<button class="location-btn" data-location="Chennai">Chennai</button>
+</section>
 
-        <input 
-            type="text"
-            id="searchInput"
-            class="search-input"
-            placeholder="Enter city name"
-        >
+<section id="homeSection">
+<p>Search a city to see weather</p>
+</section>
 
-        <button id="searchBtn" class="search-btn">
-            Search
-        </button>
+<!-- DOTS -->
+<div class="dots">
+<span class="dot active" onclick="goSlide(0)"></span>
+<span class="dot" onclick="goSlide(1)"></span>
+<span class="dot" onclick="goSlide(2)"></span>
+</div>
 
-    </section>
+<section class="ai-chat">
 
-    <!-- QUICK LOCATION -->
-    <section class="location-buttons">
+<h3>Weather AI</h3>
 
-        <button class="location-btn" data-location="Delhi">Delhi</button>
-        <button class="location-btn" data-location="Mumbai">Mumbai</button>
-        <button class="location-btn" data-location="Kolkata">Kolkata</button>
-        <button class="location-btn" data-location="Chennai">Chennai</button>
+<div class="ai-box">
 
-    </section>
-
-    <!-- WEATHER OUTPUT (JS CONTROLLED AREA) -->
-    <section id="homeSection">
-        <p class="loading-text">Detecting your location...</p>
-    </section>
-
-    <!-- AI SECTION -->
-    <section class="ai-chat">
-
-        <div class="ai-container">
-
-            <img src="https://i.ibb.co/xKgRbQxT/image.png" class="ai-image">
-
-            <div class="ai-box">
-
-                <h3>🤖 Weather AI Assistant</h3>
-
-                <div class="suggestions">
-
-                    <p>Try asking:</p>
-
-                    <button onclick="fillQuestion('What is the temperature here?')">
-                        Temperature
-                    </button>
-
-                    <button onclick="fillQuestion('What should I wear in this weather?')">
-                        What to Wear
-                    </button>
-
-                    <button onclick="fillQuestion('Which crop grows best in this weather?')">
-                        Best Crop
-                    </button>
-
-                    <button onclick="fillQuestion('What disease can occur in this weather?')">
-                        Disease Risk
-                    </button>
-
-                </div>
-
-                <input
-                    id="aiInput"
-                    class="ai-input"
-                    placeholder="Ask weather related question..."
-                >
-
-                <button onclick="askAI()" class="ai-btn">
-                    Ask
-                </button>
-
-                <p id="aiOutput" class="ai-output"></p>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <!-- FOOTER -->
-    <footer>
-        <p>WeatherSphere © 2025</p>
-    </footer>
+<input id="aiInput" class="ai-input" placeholder="Ask...">
+<button onclick="askAI()" class="ai-btn">Ask</button>
+<p id="aiOutput" class="ai-output"></p>
 
 </div>
 
-<!-- SCRIPT -->
-<script src="script.js"></script>
+</section>
 
-<!-- ENTER KEY SUPPORT -->
-<script>
-document.getElementById("searchInput")
-.addEventListener("keypress", function(e){
-    if(e.key === "Enter"){
-        document.getElementById("searchBtn").click();
-    }
-});
-</script>
+<footer>
+<p>WeatherSphere © 2026</p>
+</footer>
+
+</div>
+
+<script src="script.js"></script>
 
 </body>
 </html>
