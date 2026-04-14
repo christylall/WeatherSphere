@@ -1,4 +1,5 @@
 const API_KEY = "da287b27ab2c62083846949656a915d4";
+
 const homeSection = document.getElementById("homeSection");
 const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("searchInput");
@@ -9,26 +10,21 @@ const aiOutput = document.getElementById("aiOutput");
 let currentWeather = "";
 let currentTemp = 0;
 
-/* 🌍 QUICK BUTTONS */
-document.querySelectorAll(".location-btn").forEach(btn=>{
-    btn.onclick = ()=>getWeather(btn.dataset.location);
-});
-
-/* 🌤️ ICONS */
+/* ICONS */
 const weatherIcons={
     Clear:"☀️", Clouds:"☁️", Rain:"🌧️", Snow:"❄️",
     Thunderstorm:"⚡", Mist:"🌫️", Haze:"🌫️", Drizzle:"🌦️"
 };
 
-/* 🌫️ AQI */
+/* AQI */
 async function getAQI(lat,lon){
     try{
         const data=await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`).then(r=>r.json());
         return data.list[0].main.aqi;
-    }catch{ return "--"; }
+    }catch{return "--";}
 }
 
-/* 🌆 WEATHER */
+/* WEATHER */
 async function getWeather(city){
     homeSection.innerHTML="🔍 Loading...";
     try{
@@ -39,18 +35,11 @@ async function getWeather(city){
 
         renderWeather(current,forecast);
     }catch{
-        homeSection.innerHTML="⚠️ Error";
+        homeSection.innerHTML="⚠️ Error loading weather";
     }
 }
 
-/* 📍 LOCATION */
-async function getWeatherByLocation(lat,lon){
-    const current=await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`).then(r=>r.json());
-    const forecast=await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`).then(r=>r.json());
-    renderWeather(current,forecast);
-}
-
-/* 🎨 RENDER */
+/* RENDER */
 async function renderWeather(current,forecast){
 
     currentWeather=current.weather[0].main;
@@ -64,6 +53,9 @@ async function renderWeather(current,forecast){
     if(aqi==2){aqiText="Fair 🙂";aqiColor="#f1c40f";}
     if(aqi==3){aqiText="Moderate 😐";aqiColor="#e67e22";}
     if(aqi>=4){aqiText="Poor 😷";aqiColor="#e74c3c";}
+
+    const sunrise=new Date(current.sys.sunrise*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+    const sunset=new Date(current.sys.sunset*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
 
     const hourly=forecast.list.slice(0,8);
 
@@ -83,10 +75,18 @@ async function renderWeather(current,forecast){
         <h2>📍 ${current.name}</h2>
         <h1>${currentTemp.toFixed(1)}°C</h1>
         <p>${icon} ${current.weather[0].description}</p>
+
+        <div class="extra-info">
+            <p>🤒 Feels ${current.main.feels_like.toFixed(1)}°C</p>
+            <p>💧 ${current.main.humidity}%</p>
+            <p>💨 ${current.wind.speed} m/s</p>
+            <p>🌅 ${sunrise}</p>
+            <p>🌇 ${sunset}</p>
+        </div>
     </div>
 
     <div class="aqi-card" style="background:${aqiColor}">
-        🌫️ AQI: ${aqi} (${aqiText})
+        🌫️ AQI ${aqi} • ${aqiText}
     </div>
 
     <div class="swipe-container">
@@ -94,24 +94,34 @@ async function renderWeather(current,forecast){
 
             <div class="swipe-slide">
                 <h3>⏰ Hourly</h3>
-                ${hourly.map(h=>`
-                    <p>🕒 ${h.dt_txt.slice(11,16)} → ${h.main.temp.toFixed(0)}°C</p>
-                `).join("")}
+                <div class="hourly-cards">
+                    ${hourly.map(h=>`
+                        <div class="hour-card">
+                            <p>${h.dt_txt.slice(11,16)}</p>
+                            <p>${weatherIcons[h.weather[0].main]}</p>
+                            <p>${h.main.temp.toFixed(0)}°C</p>
+                        </div>
+                    `).join("")}
+                </div>
             </div>
 
             <div class="swipe-slide">
                 <h3>🌅 Tomorrow</h3>
-                ${daily[tomorrow]?.map(t=>`
-                    <p>🕒 ${t.dt_txt.slice(11,16)} → ${t.main.temp.toFixed(0)}°C ${weatherIcons[t.weather[0].main]}</p>
-                `).join("")||"No data"}
+                <div class="tomorrow-box">
+                    ${daily[tomorrow]?.map(t=>`
+                        <p>${t.dt_txt.slice(11,16)} → ${weatherIcons[t.weather[0].main]} ${t.main.temp.toFixed(0)}°C</p>
+                    `).join("")||"No data"}
+                </div>
             </div>
 
             <div class="swipe-slide">
                 <h3>📅 5 Days</h3>
-                ${fiveDays.map(d=>{
-                    const avg=(daily[d].reduce((s,x)=>s+x.main.temp,0)/daily[d].length).toFixed(0);
-                    return `<p>📆 ${d} → ${avg}°C</p>`;
-                }).join("")}
+                <div class="forecast-cards">
+                    ${fiveDays.map(d=>{
+                        const avg=(daily[d].reduce((s,x)=>s+x.main.temp,0)/daily[d].length).toFixed(0);
+                        return `<div class="forecast-card"><p>${d}</p><p>${avg}°C</p></div>`;
+                    }).join("")}
+                </div>
             </div>
 
         </div>
@@ -122,7 +132,7 @@ async function renderWeather(current,forecast){
     initSwipe();
 }
 
-/* 🌦️ ANIMATION */
+/* ANIMATION */
 function runAnimation(type){
     const box=document.getElementById("weatherAnimation");
     box.innerHTML="";
@@ -135,21 +145,11 @@ function runAnimation(type){
     }
 
     if(type==="Rain"||type==="Drizzle"){
-        for(let i=0;i<80;i++){
+        for(let i=0;i<100;i++){
             const r=document.createElement("div");
             r.className="rain-drop";
             r.style.left=Math.random()*100+"%";
             box.appendChild(r);
-        }
-    }
-
-    if(type==="Snow"){
-        for(let i=0;i<40;i++){
-            const s=document.createElement("div");
-            s.className="snowflake";
-            s.innerText="❄️";
-            s.style.left=Math.random()*100+"%";
-            box.appendChild(s);
         }
     }
 
@@ -163,7 +163,7 @@ function runAnimation(type){
     }
 }
 
-/* 👉 SLIDER */
+/* SLIDER */
 function initSwipe(){
     const slider=document.getElementById("slider");
     let startX=0,index=0;
@@ -174,54 +174,52 @@ function initSwipe(){
         slider.style.transform=`translateX(-${index*100}%)`;
     }
 
-    slider.addEventListener("touchstart",e=>startX=e.touches[0].clientX);
-    slider.addEventListener("touchend",e=>move(startX-e.changedTouches[0].clientX));
+    slider.onmousedown=e=>startX=e.clientX;
+    slider.onmouseup=e=>move(startX-e.clientX);
 
-    slider.addEventListener("mousedown",e=>startX=e.clientX);
-    slider.addEventListener("mouseup",e=>move(startX-e.clientX));
+    slider.ontouchstart=e=>startX=e.touches[0].clientX;
+    slider.ontouchend=e=>move(startX-e.changedTouches[0].clientX);
 }
 
-/* 🔍 SEARCH */
+/* SEARCH */
 searchBtn.onclick=()=>getWeather(searchInput.value);
 searchInput.onkeypress=e=>{if(e.key==="Enter") searchBtn.click();};
 
-/* 🌙 DARK MODE */
+/* DARK MODE */
 themeToggle.onclick=()=>document.body.classList.toggle("dark-mode");
 
-/* 📍 AUTO */
+/* AUTO */
 window.onload=()=>{
     getWeather("Delhi");
-    navigator.geolocation?.getCurrentPosition(pos=>{
-        getWeatherByLocation(pos.coords.latitude,pos.coords.longitude);
-    });
 };
 
-/* 🤖 AI */
-window.fillQuestion=function(q){
-    aiInput.value=q;
-    askAI();
-}
-
+/* AI (UPGRADED) */
 function askAI(){
     const q=aiInput.value.toLowerCase();
 
     if(!currentWeather){
-        aiOutput.innerText="⏳ Search weather first!";
+        aiOutput.innerText="⏳ First search weather!";
         return;
     }
 
     if(q.includes("temp"))
-        aiOutput.innerText=`🌡️ ${currentTemp}°C — ${currentTemp>30?"Hot ☀️":"Pleasant 🙂"}`;
+        aiOutput.innerText=`🌡️ ${currentTemp}°C — ${currentTemp>32?"🔥 Quite hot, stay hydrated":"🌿 Comfortable weather"}`;
 
     else if(q.includes("wear"))
-        aiOutput.innerText=currentTemp>30?"👕 Light clothes + sunglasses 😎":"🧥 Wear jacket";
+        aiOutput.innerText=currentTemp>32
+        ? "👕 Cotton clothes + sunglasses 😎 recommended"
+        : "🧥 Light jacket or casual wear works";
 
     else if(q.includes("crop"))
-        aiOutput.innerText=currentWeather==="Rain"?"🌾 Rice & Sugarcane":"🌱 Wheat & Maize";
+        aiOutput.innerText=currentWeather==="Rain"
+        ? "🌾 Best for Rice & Sugarcane"
+        : "🌱 Suitable for Wheat & Maize";
 
     else if(q.includes("disease"))
-        aiOutput.innerText=currentWeather==="Rain"?"🦟 Dengue risk":"😷 Cold/flu";
+        aiOutput.innerText=currentWeather==="Rain"
+        ? "🦟 High dengue/malaria risk — avoid water stagnation"
+        : "😷 Chances of cold & flu";
 
     else
-        aiOutput.innerText="Ask about temp 🌡️, wear 👗, crop 🌾, disease 🦟";
+        aiOutput.innerText="Try: temperature 🌡️, wear 👕, crop 🌾, disease 🦟";
 }
