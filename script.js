@@ -1,12 +1,5 @@
+/* --- CONFIG & STATE --- */
 const API_KEY = "da287b27ab2c62083846949656a915d4";
-
-const homeSection = document.getElementById("homeSection");
-const searchBtn = document.getElementById("searchBtn");
-const searchInput = document.getElementById("searchInput");
-const themeToggle = document.getElementById("themeToggle");
-const aiInput = document.getElementById("aiInput");
-const aiOutput = document.getElementById("aiOutput");
-
 let currentWeather = "";
 let currentTemp = 0;
 let currentSlideIndex = 0;
@@ -16,12 +9,7 @@ const weatherIcons = {
     Thunderstorm: "⚡", Mist: "🌫️", Haze: "🌫️", Drizzle: "🌦️"
 };
 
-/* --- QUICK CITY BUTTONS --- */
-document.querySelectorAll(".location-btn").forEach(btn => {
-    btn.addEventListener("click", () => getWeather(btn.dataset.location));
-});
-
-/* --- AQI FETCH --- */
+/* --- API CALLS --- */
 async function getAQI(lat, lon) {
     try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
@@ -30,9 +18,9 @@ async function getAQI(lat, lon) {
     } catch { return "--"; }
 }
 
-/* --- GET WEATHER --- */
 async function getWeather(city) {
-    homeSection.innerHTML = "<p class='loading-text'>Fetching Weather Data...</p>";
+    const homeSection = document.getElementById("homeSection");
+    homeSection.innerHTML = "<p style='text-align:center;'>Fetching weather data...</p>";
     try {
         const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
         const current = await currentRes.json();
@@ -44,21 +32,11 @@ async function getWeather(city) {
     }
 }
 
-async function getWeatherByLocation(lat, lon) {
-    try {
-        const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
-        const current = await currentRes.json();
-        const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
-        const forecast = await forecastRes.json();
-        renderWeather(current, forecast);
-    } catch (err) { console.error(err); }
-}
-
-/* --- RENDER EVERYTHING --- */
-async function renderWeather(current, forecast) {
+/* --- UI RENDERING --- */
+function renderWeather(current, forecast) {
+    const homeSection = document.getElementById("homeSection");
     currentWeather = current.weather[0].main;
     currentTemp = current.main.temp;
-    const aqi = await getAQI(current.coord.lat, current.coord.lon);
     currentSlideIndex = 0;
 
     const dailyData = {};
@@ -78,14 +56,14 @@ async function renderWeather(current, forecast) {
         <p>${weatherIcons[currentWeather] || "🌡️"} ${current.weather[0].description}</p>
     </div>
 
-    <div class="aqi-card"><h3>Air Quality: ${aqi}</h3></div>
-    <div class="prevention-card"><h3>Health Advice: ${currentWeather === 'Rain' ? 'Carry Umbrella' : 'Stay Hydrated'}</h3></div>
+    <div class="aqi-card"><h3>AQI Index: Loading...</h3></div>
+    <div class="prevention-card"><h3>Health Advice: ${currentWeather === 'Rain' ? 'Take an umbrella' : 'Stay Safe'}</h3></div>
 
     <div class="swipe-container">
         <div class="swipe-slider" id="slider">
             <div class="swipe-slide">
-                <h3>Hourly Forecast</h3>
-                <div class="hourly-cards">
+                <h3>Hourly</h3>
+                <div class="hourly-cards" style="display:flex; gap:10px; overflow-x:auto;">
                     ${forecast.list.slice(0, 8).map(h => `
                         <div class="hour-card">
                             <p>${h.dt_txt.split(" ")[1].slice(0,5)}</p>
@@ -98,14 +76,14 @@ async function renderWeather(current, forecast) {
             <div class="swipe-slide">
                 <h3>Tomorrow</h3>
                 <div class="tomorrow-box">
-                    ${dailyData[dayKeys[1]] ? dailyData[dayKeys[1]].slice(0, 5).map(t => `
+                    ${dailyData[dayKeys[1]] ? dailyData[dayKeys[1]].slice(0, 4).map(t => `
                         <p>${t.dt_txt.split(" ")[1].slice(0,5)} - ${t.main.temp.toFixed(1)}°C</p>
-                    `).join("") : "No data"}
+                    `).join("") : "No Data"}
                 </div>
             </div>
             <div class="swipe-slide">
                 <h3>5-Day Forecast</h3>
-                <div class="forecast-cards">
+                <div class="forecast-cards" style="display:flex; gap:10px; overflow-x:auto;">
                     ${fiveDayList.map(day => {
                         const info = dailyData[day][0];
                         return `<div class="forecast-card">
@@ -123,12 +101,43 @@ async function renderWeather(current, forecast) {
             <span class="dot" onclick="goToSlide(2)"></span>
         </div>
     </div>`;
-    
-    runAnimation(currentWeather);
+
+    // Update AQI separately
+    getAQI(current.coord.lat, current.coord.lon).then(aqi => {
+        const aqiDiv = document.querySelector(".aqi-card h3");
+        if(aqiDiv) aqiDiv.innerText = "Air Quality: " + aqi;
+    });
+
     initSwipe();
 }
 
-/* --- SWIPE & DOTS LOGIC --- */
+/* --- AI & INTERACTIVE FUNCTIONS --- */
+window.fillQuestion = function(q) {
+    document.getElementById("aiInput").value = q;
+    window.askAI();
+};
+
+window.askAI = function() {
+    const aiOutput = document.getElementById("aiOutput");
+    const aiInput = document.getElementById("aiInput");
+    
+    if(!currentWeather) { 
+        aiOutput.innerText = "Please search for a city first."; 
+        return; 
+    }
+    
+    const q = aiInput.value.toLowerCase();
+    let ans = "I can tell you about clothing, crops, or health risk.";
+    
+    if(q.includes("temperature")) ans = `The current temperature is ${currentTemp.toFixed(1)}°C.`;
+    else if(q.includes("wear")) ans = (currentTemp > 30) ? "Wear light cotton clothes." : "Comfortable casuals are fine.";
+    else if(q.includes("crop")) ans = "Rice or Maize would grow well in this climate.";
+    else if(q.includes("disease")) ans = "Ensure you drink clean water and avoid dehydration.";
+    
+    aiOutput.innerText = ans;
+};
+
+/* --- SLIDER LOGIC --- */
 window.goToSlide = function(index) {
     const slider = document.getElementById("slider");
     if (!slider) return;
@@ -137,21 +146,13 @@ window.goToSlide = function(index) {
     document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === index));
 };
 
-function initSwipe(){
+function initSwipe() {
     const slider = document.getElementById("slider");
     if(!slider) return;
     let startX = 0, isDragging = false;
-    slider.addEventListener("touchstart", e => startX = e.touches[0].clientX);
-    slider.addEventListener("touchend", e => {
-        let diff = startX - e.changedTouches[0].clientX;
-        if(Math.abs(diff) > 50) {
-            if (diff > 0 && currentSlideIndex < 2) currentSlideIndex++;
-            else if (diff < 0 && currentSlideIndex > 0) currentSlideIndex--;
-            window.goToSlide(currentSlideIndex);
-        }
-    });
-    slider.addEventListener("mousedown", e => { startX = e.clientX; isDragging = true; slider.style.cursor = "grabbing"; });
-    window.addEventListener("mouseup", e => {
+
+    slider.onmousedown = (e) => { startX = e.clientX; isDragging = true; };
+    window.onmouseup = (e) => {
         if (!isDragging) return;
         let diff = startX - e.clientX;
         if(Math.abs(diff) > 50) {
@@ -160,46 +161,37 @@ function initSwipe(){
         }
         window.goToSlide(currentSlideIndex);
         isDragging = false;
-        slider.style.cursor = "grab";
+    };
+    
+    slider.ontouchstart = (e) => { startX = e.touches[0].clientX; };
+    slider.ontouchend = (e) => {
+        let diff = startX - e.changedTouches[0].clientX;
+        if(Math.abs(diff) > 50) {
+            if (diff > 0 && currentSlideIndex < 2) currentSlideIndex++;
+            else if (diff < 0 && currentSlideIndex > 0) currentSlideIndex--;
+            window.goToSlide(currentSlideIndex);
+        }
+    };
+}
+
+/* --- INITIALIZATION --- */
+document.addEventListener("DOMContentLoaded", () => {
+    // Theme
+    document.getElementById("themeToggle").onclick = () => {
+        document.body.classList.toggle("dark-mode");
+    };
+
+    // Search
+    document.getElementById("searchBtn").onclick = () => {
+        const val = document.getElementById("searchInput").value;
+        if(val) getWeather(val);
+    };
+
+    // Quick Buttons
+    document.querySelectorAll(".location-btn").forEach(btn => {
+        btn.onclick = () => getWeather(btn.dataset.location);
     });
-}
 
-/* --- AI LOGIC (FIXED) --- */
-window.fillQuestion = function(q) {
-    aiInput.value = q;
-    window.askAI();
-};
-
-window.askAI = function() {
-    if(!currentWeather) { aiOutput.innerText = "Please search for a city first."; return; }
-    const q = aiInput.value.toLowerCase();
-    let ans = "Ask about temperature, wear, crop, or disease.";
-    if(q.includes("temperature")) ans = `Current temp is ${currentTemp.toFixed(1)}°C.`;
-    else if(q.includes("wear")) ans = currentWeather === "Rain" ? "Wear a raincoat ☔" : "Wear comfortable clothes.";
-    else if(q.includes("crop")) ans = "Rice is good for rain, Wheat for winter.";
-    else if(q.includes("disease")) ans = "Risk of flu or seasonal infections.";
-    aiOutput.innerText = ans;
-};
-
-/* --- THEME & INITIAL LOAD --- */
-themeToggle.addEventListener("click", () => {
-    document.body.classList.toggle("dark-mode");
-});
-
-searchBtn.addEventListener("click", () => {
-    if(searchInput.value.trim()) getWeather(searchInput.value.trim());
-});
-
-function runAnimation(type) {
-    const box = document.getElementById("weatherAnimation");
-    if(!box) return;
-    box.innerHTML = "";
-    if(type === "Clear") box.innerHTML = "<div class='sun'></div>";
-}
-
-window.addEventListener("load", () => {
+    // Default load
     getWeather("Delhi");
-    if(navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(p => getWeatherByLocation(p.coords.latitude, p.coords.longitude));
-    }
 });
