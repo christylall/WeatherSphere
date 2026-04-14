@@ -168,7 +168,10 @@ async function renderWeather(current, forecast) {
     `;
 
     runAnimation(currentWeather);
+    if(!window.swipeInitialized){
     initSwipe();
+    window.swipeInitialized = true;
+};
 }
 
 /* WEATHER ANIMATION */
@@ -209,56 +212,67 @@ function initSwipe(){
     const slider = document.getElementById("slider");
     if(!slider) return;
 
-    let startX = 0;
     let index = 0;
-    let dragging = false;
+    let startX = 0;
+    let isDown = false;
+
+    const slides = document.querySelectorAll(".swipe-slide");
+    const total = slides.length;
 
     function move(){
         slider.style.transform = `translateX(-${index * 100}%)`;
     }
 
-    // MOBILE
-    slider.addEventListener("touchstart", e=>{
+    /* ================= MOBILE ================= */
+    slider.addEventListener("touchstart", (e) => {
         startX = e.touches[0].clientX;
     });
 
-    slider.addEventListener("touchend", e=>{
+    slider.addEventListener("touchend", (e) => {
         let diff = startX - e.changedTouches[0].clientX;
 
-        if(diff > 50 && index < 2) index++;
+        if(diff > 50 && index < total - 1) index++;
         if(diff < -50 && index > 0) index--;
 
         move();
     });
 
-    // LAPTOP
-    slider.addEventListener("mousedown", e=>{
-        dragging = true;
+    /* ================= LAPTOP ================= */
+    slider.addEventListener("mousedown", (e) => {
+        isDown = true;
         startX = e.clientX;
+        slider.style.cursor = "grabbing";
     });
 
-    window.addEventListener("mouseup", ()=>{
-        dragging = false;
+    window.addEventListener("mouseup", () => {
+        isDown = false;
+        slider.style.cursor = "grab";
     });
 
-    window.addEventListener("mousemove", e=>{
-        if(!dragging) return;
+    window.addEventListener("mousemove", (e) => {
+        if(!isDown) return;
 
         let diff = startX - e.clientX;
 
-        if(diff > 80 && index < 2){
+        if(diff > 80 && index < total - 1){
             index++;
             startX = e.clientX;
+            move();
         }
 
         if(diff < -80 && index > 0){
             index--;
             startX = e.clientX;
+            move();
         }
-
-        move();
     });
+
+    slider.style.cursor = "grab";
 }
+
+    
+        
+         
 
  
 
