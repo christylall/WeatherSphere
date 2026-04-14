@@ -349,3 +349,97 @@ animation:sunPulse 4s infinite;
 font-size:1.9rem;
 }
 }
+/* 🔥 FIXED CENTER ALIGNMENT */
+.current-weather{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+}
+
+/* 🔥 WEATHER ICON FIX */
+.current-weather p{
+    font-size:18px;
+    margin-top:5px;
+}
+
+/* 🔥 EXTRA INFO BOX FIX */
+.extra-info{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-top:15px;
+}
+
+.extra-info p{
+    background:rgba(0,0,0,0.6);
+    color:white;
+    padding:12px;
+    border-radius:12px;
+    text-align:center;
+    font-weight:600;
+}
+
+/* 🔥 AQI FIX */
+.aqi-card{
+    font-size:18px;
+    text-align:center;
+    border-radius:12px;
+}
+
+/* 🔥 THEME BUTTON FIX */
+.theme-toggle{
+    color:white !important;
+    font-weight:bold;
+    z-index:5;
+}
+
+/* 🔥 INPUT FIX */
+.search-input{
+    color:black;
+}
+
+/* 🔥 SLIDER VISIBILITY FIX */
+.swipe-container{
+    overflow:hidden;
+    margin-top:20px;
+}
+
+.swipe-slider{
+    display:flex;
+    transition:transform 0.4s ease;
+}
+
+.swipe-slide{
+    min-width:100%;
+    text-align:center;
+    padding:15px;
+}
+
+/* 🔥 SLIDE TEXT */
+.swipe-slide p{
+    margin:5px 0;
+    font-weight:500;
+}
+
+/* 🔥 BACKGROUND ISSUE FIX */
+#weatherAnimation{
+    z-index:-1 !important;
+}
+
+/* 🔥 BODY TEXT FIX */
+body{
+    color:#222;
+}
+body.dark-mode{
+    color:#fff;
+}
+
+/* 🔥 BETTER CARD LOOK */
+.current-weather{
+    backdrop-filter:blur(10px);
+}
+
+.aqi-card{
+    backdrop-filter:blur(10px);
+}
