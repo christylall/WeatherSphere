@@ -11,7 +11,7 @@ let currentWeather = "";
 let currentTemp = 0;
 let index = 0;
 
-/* WEATHER BUTTONS */
+ /* WEATHER BUTTONS */
 document.querySelectorAll(".location-btn").forEach(btn => {
     btn.onclick = () => getWeather(btn.dataset.location);
 });
