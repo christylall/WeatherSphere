@@ -1,14 +1,7 @@
 /* --- ⚙️ CONFIG --- */
 const API_KEY = "da287b27ab2c62083846949656a915d4";
 
-// Saare Elements ko sahi se pakadna
-const homeSection = document.getElementById("homeSection");
-const searchBtn = document.getElementById("searchBtn");
-const searchInput = document.getElementById("searchInput");
-const themeToggle = document.getElementById("themeToggle");
-const aiInput = document.getElementById("aiInput");
-const aiOutput = document.getElementById("aiOutput");
-
+// Global Variables
 let currentWeather = "";
 let currentTemp = 0;
 let currentSlideIndex = 0;
@@ -18,18 +11,11 @@ const weatherIcons = {
     Thunderstorm: "⚡", Mist: "🌫️", Haze: "🌫️", Drizzle: "🌦️", Smoke: "💨"
 };
 
-/* --- 🍃 AQI FETCH --- */
-async function getAQI(lat, lon) {
-    try {
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
-        const data = await res.json();
-        return data.list[0].main.aqi;
-    } catch { return "--"; }
-}
-
 /* --- 📡 WEATHER FETCH --- */
 async function getWeather(city) {
-    if(!city) return;
+    const homeSection = document.getElementById("homeSection");
+    if(!city || !homeSection) return;
+    
     homeSection.innerHTML = "<p style='text-align:center;'>🔍 Fetching Weather Magic... 📡</p>";
     try {
         const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
@@ -51,16 +37,15 @@ async function getWeather(city) {
 
 /* --- 🎨 UI RENDERING --- */
 async function renderWeather(current, forecast) {
+    const homeSection = document.getElementById("homeSection");
     currentWeather = current.weather[0].main;
     currentTemp = current.main.temp;
     currentSlideIndex = 0; 
 
     const icon = weatherIcons[currentWeather] || "🌡️";
-    const aqi = await getAQI(current.coord.lat, current.coord.lon);
     const sunrise = new Date(current.sys.sunrise * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     const sunset = new Date(current.sys.sunset * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-    // Forecast Data Logic
     const daily = {};
     forecast.list.forEach(item => {
         const date = item.dt_txt.split(" ")[0];
@@ -84,9 +69,7 @@ async function renderWeather(current, forecast) {
         </div>
     </div>
 
-    <div class="aqi-card"><h3>🍃 AQI: ${aqi} | Health: ${aqi <= 2 ? 'Good ✅' : 'Mask up! 😷'}</h3></div>
-
-    <div class="swipe-container" style="overflow:hidden; width:100%;">
+    <div class="swipe-container" style="overflow:hidden; width:100%; margin-top:15px;">
         <div class="swipe-slider" id="slider" style="display:flex; width:300%; transition: transform 0.4s ease; cursor:grab;">
             <div class="swipe-slide" style="width:33.33%;">
                 <h3>🕒 Hourly Forecast</h3>
@@ -131,7 +114,7 @@ async function renderWeather(current, forecast) {
     initSwipe();
 }
 
-/* --- 🎡 SLIDER & BUTTONS LOGIC --- */
+/* --- 🎡 SLIDER LOGIC --- */
 window.goToSlide = function(index) {
     const slider = document.getElementById("slider");
     if (!slider) return;
@@ -168,28 +151,43 @@ function initSwipe(){
     };
 }
 
-/* --- 🤖 AI & INTERACTION --- */
+/* --- 🤖 AI INTERACTION --- */
 window.fillQuestion = function(q) {
-    aiInput.value = q;
+    const aiInput = document.getElementById("aiInput");
+    if(aiInput) aiInput.value = q;
     window.askAI();
 };
 
 window.askAI = function() {
+    const aiOutput = document.getElementById("aiOutput");
+    const aiInput = document.getElementById("aiInput");
     if(!currentWeather) { aiOutput.innerText = "🕵️ Search a city first!"; return; }
+    
     const q = aiInput.value.toLowerCase();
     let ans = "🤖 I can help with clothes 👗, crops 🌾, or health!";
-    if(q.includes("temp")) ans = `🌡️ Current temperature is ${currentTemp.toFixed(1)}°C.`;
-    else if(q.includes("wear")) ans = currentTemp > 30 ? "👕 Wear light cotton clothes!" : "🧥 Wear a jacket!";
-    else if(q.includes("crop")) ans = "🌾 Good for seasonal crops like Rice or Wheat!";
+    if(q.includes("temp")) ans = `🌡️ It's ${currentTemp.toFixed(1)}°C.`;
+    else if(q.includes("wear")) ans = currentTemp > 30 ? "👕 Wear cotton clothes!" : "🧥 Wear a jacket!";
+    else if(q.includes("crop")) ans = "🌾 Good for Rice or Wheat!";
+    
     aiOutput.innerHTML = `<b>AI:</b> ${ans}`;
 };
 
-/* --- ✨ INITIALIZE --- */
-searchBtn.addEventListener("click", () => getWeather(searchInput.value));
-themeToggle.addEventListener("click", () => document.body.classList.toggle("dark-mode"));
+/* --- ✨ INITIALIZE EVERYTHING (The Fix) --- */
+document.addEventListener("DOMContentLoaded", () => {
+    const searchBtn = document.getElementById("searchBtn");
+    const searchInput = document.getElementById("searchInput");
+    const themeToggle = document.getElementById("themeToggle");
 
-document.querySelectorAll(".location-btn").forEach(btn => {
-    btn.onclick = () => getWeather(btn.getAttribute("data-location"));
+    if(searchBtn) searchBtn.onclick = () => getWeather(searchInput.value);
+    
+    if(themeToggle) themeToggle.onclick = () => document.body.classList.toggle("dark-mode");
+
+    document.querySelectorAll(".location-btn").forEach(btn => {
+        btn.onclick = () => getWeather(btn.getAttribute("data-location"));
+    });
+
+    // Default load
+    getWeather("Delhi");
 });
 
 function runAnimation(type) {
@@ -202,6 +200,3 @@ function runAnimation(type) {
         }
     }
 }
-
-// Default Load
-window.onload = () => getWeather("Delhi");
