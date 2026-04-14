@@ -9,7 +9,7 @@ const aiOutput = document.getElementById("aiOutput");
 
 let currentWeather = "";
 let currentTemp = 0;
-let currentSlideIndex = 0; // Global index for dots
+let currentSlideIndex = 0;
 
 /* QUICK CITY BUTTONS */
 document.querySelectorAll(".location-btn").forEach(btn => {
@@ -71,7 +71,6 @@ async function getWeatherByLocation(lat, lon) {
         renderWeather(current, forecast);
     } catch (err) {
         console.error("Location weather fetch failed:", err);
-        homeSection.innerHTML = "<p>Location weather fetch failed</p>";
     }
 }
 
@@ -89,6 +88,8 @@ async function renderWeather(current, forecast) {
     const sunsetTime = new Date(current.sys.sunset * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
     const hourly = forecast.list.slice(0, 8);
+
+    // Grouping for 5-Day Forecast
     const daily = {};
     forecast.list.forEach(item => {
         const date = item.dt_txt.split(" ")[0];
@@ -97,7 +98,7 @@ async function renderWeather(current, forecast) {
     });
 
     const days = Object.keys(daily);
-    const tomorrow = days[1];
+    const tomorrow = days[1] || days[0];
     const fiveDays = days.slice(1, 6);
 
     let advice = "Stay hydrated";
@@ -106,7 +107,6 @@ async function renderWeather(current, forecast) {
     if (currentWeather === "Clouds") advice = "Light jacket recommended";
     if (aqi >= 4) advice = "Avoid outdoor activities";
 
-    // Reset slide index on new search
     currentSlideIndex = 0;
 
     homeSection.innerHTML = `
@@ -114,16 +114,12 @@ async function renderWeather(current, forecast) {
         <h2>${current.name}, ${current.sys.country}</h2>
         <h1>${currentTemp.toFixed(1)}°C</h1>
         <p>${icon} ${current.weather[0].description}</p>
-        <p>Feels Like ${current.main.feels_like.toFixed(1)}°C</p>
-        <p>Humidity ${current.main.humidity}%</p>
-        <p>Wind ${current.wind.speed} m/s</p>
-        <p>🌄Sunrise ${sunriseTime}</p>
-        <p>🌇Sunset ${sunsetTime}</p>
+        <p>Feels Like ${current.main.feels_like.toFixed(1)}°C | Humidity ${current.main.humidity}%</p>
+        <p>🌄Sunrise ${sunriseTime} | 🌇Sunset ${sunsetTime}</p>
     </div>
 
     <div class="aqi-card">
-        <h3>Air Quality</h3>
-        <p>${aqi}</p>
+        <h3>Air Quality Index: ${aqi}</h3>
     </div>
 
     <div class="prevention-card">
@@ -155,8 +151,9 @@ async function renderWeather(current, forecast) {
                 <h3>5 Day Forecast</h3>
                 <div class="forecast-cards">
                     ${fiveDays.map(day => {
-                        const avg = (daily[day].reduce((s,d)=>s+d.main.temp,0)/daily[day].length).toFixed(1);
-                        const main = daily[day][0].weather[0].main;
+                        const dayData = daily[day];
+                        const avg = (dayData.reduce((s,d)=>s+d.main.temp,0)/dayData.length).toFixed(1);
+                        const main = dayData[0].weather[0].main;
                         const name = new Date(day).toLocaleDateString("en-US",{weekday:"short"});
                         return `<div class="forecast-card"><p>${name}</p><p>${weatherIcons[main] || "🌡️"}</p><p>${avg}°C</p></div>`;
                     }).join("")}
@@ -206,7 +203,7 @@ function runAnimation(type) {
 }
 
 /* SWIPE LOGIC */
-function updateDots() {
+window.updateDots = function() {
     const dots = document.querySelectorAll('.dot');
     dots.forEach((dot, i) => dot.classList.toggle('active', i === currentSlideIndex));
 }
@@ -216,7 +213,7 @@ window.goToSlide = function(index) {
     if (!slider) return;
     currentSlideIndex = index;
     slider.style.transform = `translateX(-${index * 100}%)`;
-    updateDots();
+    window.updateDots();
 };
 
 function initSwipe(){
@@ -247,7 +244,7 @@ function initSwipe(){
         else if (diff < -50 && currentSlideIndex > 0) currentSlideIndex--;
         window.goToSlide(currentSlideIndex);
     }
-    updateDots();
+    window.updateDots();
 }
 
 /* SEARCH & THEME */
@@ -273,21 +270,17 @@ window.addEventListener("load", () => {
 window.fillQuestion = function(q) { aiInput.value = q; askAI(); };
 
 window.askAI = function() {
-    if(!currentWeather) { aiOutput.innerText = "Load weather first."; return; }
+    if(!currentWeather) { aiOutput.innerText = "Weather data loading..."; return; }
     const q = aiInput.value.toLowerCase();
     let ans = "Ask about temperature, wear, crop or disease.";
     if(q.includes("temperature")) ans = `Current temperature is ${currentTemp.toFixed(1)}°C`;
     else if(q.includes("wear")){
         if(currentWeather==="Rain") ans="Carry an umbrella ☔";
-        else if(currentTemp>32) ans="Wear light cotton clothes ☀️";
-        else if(currentTemp<15) ans="Wear a warm jacket 🧥";
+        else if(currentTemp>32) ans="Wear cotton clothes ☀️";
+        else if(currentTemp<15) ans="Wear a jacket 🧥";
         else ans="Comfortable casual clothes are suitable.";
     }
-    else if(q.includes("crop")){
-        ans = currentWeather==="Rain" ? "Rice and sugarcane 🌾" : "Wheat or maize.";
-    }
-    else if(q.includes("disease")){
-        ans = currentWeather==="Rain" ? "Risk of mosquito diseases like dengue 🦟" : "Normal risk.";
-    }
+    else if(q.includes("crop")) ans = "Rice for rain, Wheat for winter.";
+    else if(q.includes("disease")) ans = "Mosquito risk in rain, hydration risk in heat.";
     aiOutput.innerText = ans;
 };
