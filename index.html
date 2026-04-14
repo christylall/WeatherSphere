@@ -7,44 +7,67 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="weatherAnimation"></div>
-    <div class="container">
-        <header class="header">
-            <h1 class="app-title">WeatherSphere</h1>
-            <button id="themeToggle" class="theme-toggle">🌙 Night Theme</button>
-        </header>
 
-        <section class="search-section">
-            <input type="text" id="searchInput" class="search-input" placeholder="Enter city name...">
-            <button id="searchBtn" class="search-btn">Search</button>
-        </section>
+<div id="weatherAnimation"></div>
 
-        <section class="location-buttons">
-            <button class="location-btn" data-location="Delhi">Delhi</button>
-            <button class="location-btn" data-location="Mumbai">Mumbai</button>
-            <button class="location-btn" data-location="London">London</button>
-            <button class="location-btn" data-location="New York">New York</button>
-        </section>
+<div class="container">
+    <header class="header">
+        <h1 class="app-title">WeatherSphere 🌦️</h1>
+        <button id="themeToggle" class="theme-toggle">
+            🌙 Night Theme
+        </button>
+    </header>
 
-        <section id="homeSection">
-            <p style="text-align:center;">Loading weather...</p>
-        </section>
+    <section class="search-section">
+        <input type="text" id="searchInput" class="search-input" placeholder="Enter city name 🔍">
+        <button id="searchBtn" class="search-btn">Search</button>
+    </section>
 
-        <section class="ai-chat">
-            <div class="ai-container">
-                <div class="ai-box">
-                    <h3>🤖 Weather AI Assistant</h3>
-                    <div class="suggestions">
-                        <button onclick="fillQuestion('What should I wear?')">Outfit</button>
-                        <button onclick="fillQuestion('Best crop for this weather?')">Crops</button>
-                    </div>
-                    <input id="aiInput" class="ai-input" placeholder="Ask me anything...">
-                    <button onclick="askAI()" class="ai-btn">Ask AI</button>
-                    <p id="aiOutput" class="ai-output"></p>
+    <section class="location-buttons">
+        <button class="location-btn" data-location="Delhi">Delhi 🏛️</button>
+        <button class="location-btn" data-location="Mumbai">Mumbai 🌊</button>
+        <button class="location-btn" data-location="Kolkata">Kolkata 🛕</button>
+        <button class="location-btn" data-location="Chennai">Chennai 🏝️</button>
+    </section>
+
+    <section id="homeSection">
+        <p class="loading-text">Detecting your location... 📍</p>
+    </section>
+
+    <section class="ai-chat">
+        <div class="ai-container">
+            <img src="https://i.ibb.co/xKgRbQxT/image.png" class="ai-image">
+            <div class="ai-box">
+                <h3>🤖 Weather AI Assistant</h3>
+                <div class="suggestions">
+                    <p>Try asking ✨:</p>
+                    <button onclick="fillQuestion('What is the temperature here?')">Temperature 🌡️</button>
+                    <button onclick="fillQuestion('What should I wear in this weather?')">What to Wear 👗</button>
+                    <button onclick="fillQuestion('Which crop grows best in this weather?')">Best Crop 🌾</button>
+                    <button onclick="fillQuestion('What disease can occur in this weather?')">Disease Risk 🏥</button>
                 </div>
+                <input id="aiInput" class="ai-input" placeholder="Ask weather related question...">
+                <button onclick="askAI()" class="ai-btn">Ask 💬</button>
+                <p id="aiOutput" class="ai-output"></p>
             </div>
-        </section>
-    </div>
-    <script src="script.js"></script>
+        </div>
+    </section>
+
+    <footer>
+        <p>WeatherSphere © 2026 🌍 Made with Love ✨</p>
+    </footer>
+</div>
+
+<script src="script.js"></script>
+
+<script>
+    // Enter key support for search
+    document.getElementById("searchInput").addEventListener("keypress", function(e) {
+        if(e.key === "Enter") {
+            document.getElementById("searchBtn").click();
+        }
+    });
+</script>
+
 </body>
 </html>
