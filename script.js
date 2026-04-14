@@ -11,56 +11,89 @@ let index = 0;
 let currentTemp = 0;
 let currentWeather = "";
 
+/* EVENTS */
 searchBtn.onclick = () => getWeather(searchInput.value);
 
 document.querySelectorAll(".location-btn").forEach(btn => {
     btn.onclick = () => getWeather(btn.dataset.location);
 });
 
+/* ICONS */
 const icons = {
-    Clear:"☀️", Clouds:"☁️", Rain:"🌧️", Snow:"❄️",
-    Thunderstorm:"⚡", Mist:"🌫️", Haze:"🌫️", Drizzle:"🌦️"
+    Clear:"☀️",
+    Clouds:"☁️",
+    Rain:"🌧️",
+    Snow:"❄️",
+    Thunderstorm:"⚡",
+    Mist:"🌫️",
+    Haze:"🌫️",
+    Drizzle:"🌦️"
 };
 
+/* WEATHER */
 async function getWeather(city){
+
     if(!city) return;
 
     homeSection.innerHTML = "Loading...";
 
-    const current = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
-    ).then(r=>r.json());
-
-    if(current.cod !== 200){
-        homeSection.innerHTML = "City not found ❌";
-        return;
-    }
-
-    const forecast = await fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`
-    ).then(r=>r.json());
-
-    render(current, forecast);
-}
-
-async function getAQI(lat, lon){
     try{
-        const data = await fetch(
-            `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`
+
+        const current = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
         ).then(r=>r.json());
 
-        return data.list[0].main.aqi;
+        if(!current || current.cod !== 200){
+            homeSection.innerHTML = "City not found ❌";
+            return;
+        }
+
+        const forecast = await fetch(
+            `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`
+        ).then(r=>r.json());
+
+        render(current, forecast);
+
+    }catch(err){
+        homeSection.innerHTML = "Error loading data ⚠️";
+    }
+}
+
+/* AQI SAFE */
+async function getAQI(lat, lon){
+    try{
+        const res = await fetch(
+            `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`
+        );
+        const data = await res.json();
+        return data?.list?.[0]?.main?.aqi ?? "--";
     }catch{
         return "--";
     }
 }
 
+/* RENDER */
 async function render(current, forecast){
 
     currentTemp = current.main.temp;
     currentWeather = current.weather[0].main;
 
     const icon = icons[currentWeather] || "🌡️";
+
+    /* HOURLY */
+    const hourly = forecast.list.slice(0,8);
+
+    /* GROUP DAYS */
+    const daily = {};
+    forecast.list.forEach(i=>{
+        const d = i.dt_txt.split(" ")[0];
+        if(!daily[d]) daily[d] = [];
+        daily[d].push(i);
+    });
+
+    const days = Object.keys(daily);
+
+    /* AQI */
     const aqi = await getAQI(current.coord.lat, current.coord.lon);
 
     let aqiText = "Good 😊";
@@ -68,20 +101,9 @@ async function render(current, forecast){
     if(aqi == 3) aqiText = "Moderate 😐";
     if(aqi >= 4) aqiText = "Poor 😷";
 
-    const hourly = forecast.list.slice(0,8);
-
-    const daily = {};
-    forecast.list.forEach(i=>{
-        const d = i.dt_txt.split(" ")[0];
-        if(!daily[d]) daily[d]=[];
-        daily[d].push(i);
-    });
-
-    const days = Object.keys(daily);
-
     homeSection.innerHTML = `
     <div class="current-weather">
-        <h2>${current.name}</h2>
+        <h2>📍 ${current.name}</h2>
         <h1>${currentTemp.toFixed(1)}°C</h1>
         <p>${icon} ${current.weather[0].description}</p>
 
@@ -101,21 +123,21 @@ async function render(current, forecast){
         <div class="swipe-slider" id="slider">
 
             <div class="swipe-slide">
-                <h3>Hourly</h3>
+                <h3>Hourly ⏰</h3>
                 ${hourly.map(h=>`
                     <p>${h.dt_txt.slice(11,16)} → ${h.main.temp.toFixed(0)}°C</p>
                 `).join("")}
             </div>
 
             <div class="swipe-slide">
-                <h3>Tomorrow</h3>
-                ${daily[days[1]]?.map(t=>`
+                <h3>Tomorrow 🌅</h3>
+                ${daily[days[1]] ? daily[days[1]].map(t=>`
                     <p>${t.dt_txt.slice(11,16)} → ${t.main.temp.toFixed(0)}°C</p>
-                `).join("") || "No data"}
+                `).join("") : "No data"}
             </div>
 
             <div class="swipe-slide">
-                <h3>5 Days</h3>
+                <h3>5 Days 📅</h3>
                 ${days.slice(0,5).map(d=>`
                     <p>${d} → ${daily[d][0].main.temp.toFixed(0)}°C</p>
                 `).join("")}
@@ -146,28 +168,31 @@ function initSwipe(){
 }
 
 function move(diff){
-    if(diff > 50 && index < 2) index++;
-    if(diff < -50 && index > 0) index--;
+    if(diff > 60 && index < 2) index++;
+    if(diff < -60 && index > 0) index--;
 
     document.getElementById("slider").style.transform =
-        `translateX(-${index*100}%)`;
+        `translateX(-${index * 100}%)`;
 
     updateDots(index);
 }
 
+/* DOTS */
 function goSlide(i){
     index = i;
     document.getElementById("slider").style.transform =
-        `translateX(-${index*100}%)`;
+        `translateX(-${index * 100}%)`;
+
     updateDots(i);
 }
 
 function updateDots(i){
     document.querySelectorAll(".dot").forEach((d,idx)=>{
-        d.classList.toggle("active", idx===i);
+        d.classList.toggle("active", idx === i);
     });
 }
 
+/* AI */
 function fillQuestion(q){
     aiInput.value = q;
     askAI();
@@ -176,34 +201,64 @@ function fillQuestion(q){
 function askAI(){
     const q = aiInput.value.toLowerCase();
 
-    if(q.includes("temp"))
+    if(!currentTemp){
+        aiOutput.innerText = "Search weather first ⚠️";
+        return;
+    }
+
+    if(q.includes("temp")){
         aiOutput.innerText = `${currentTemp}°C`;
-
-    else if(q.includes("wear"))
+    }
+    else if(q.includes("wear")){
         aiOutput.innerText = currentTemp > 30 ? "Light clothes ☀️" : "Jacket 🧥";
-
-    else if(q.includes("crop"))
+    }
+    else if(q.includes("crop")){
         aiOutput.innerText = "Wheat / Rice 🌾";
-
-    else if(q.includes("disease"))
+    }
+    else if(q.includes("disease")){
         aiOutput.innerText = currentWeather === "Rain" ? "Mosquito risk 🦟" : "Low risk 🙂";
-
-    else
-        aiOutput.innerText = "Try temp / wear / crop / disease";
+    }
+    else{
+        aiOutput.innerText = "Try: temp / wear / crop / disease";
+    }
 }
 
-themeToggle.onclick = ()=>document.body.classList.toggle("dark-mode");
+/* THEME */
+themeToggle.onclick = () => {
+    document.body.classList.toggle("dark-mode");
+};
 
-window.onload = ()=>getWeather("Delhi");
+/* DEFAULT LOAD */
+window.onload = () => getWeather("Delhi");
 
+/* ANIMATION */
 function runAnimation(type){
     const box = document.getElementById("weatherAnimation");
     if(!box) return;
+
     box.innerHTML = "";
 
     if(type === "Clear"){
         const sun = document.createElement("div");
         sun.className = "sun";
         box.appendChild(sun);
+    }
+
+    if(type === "Rain"){
+        for(let i=0;i<40;i++){
+            const r = document.createElement("div");
+            r.className = "rain-drop";
+            r.style.left = Math.random()*100 + "%";
+            box.appendChild(r);
+        }
+    }
+
+    if(type === "Clouds"){
+        for(let i=0;i<5;i++){
+            const c = document.createElement("div");
+            c.className = "cloud";
+            c.style.top = (10+i*12) + "%";
+            box.appendChild(c);
+        }
     }
 }
