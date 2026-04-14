@@ -493,3 +493,14 @@ flex:1;
     background-color: #4a90e2;
     transform: scale(1.3);
 }
+.swipe-container {
+    position: relative; /* Dots ko position karne ke liye */
+    padding-bottom: 20px;
+}
+
+.slider-dots {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
