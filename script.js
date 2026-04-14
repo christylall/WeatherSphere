@@ -9,6 +9,7 @@ const aiOutput = document.getElementById("aiOutput");
 
 let currentWeather = "";
 let currentTemp = 0;
+let currentSlideIndex = 0; // Global index for dots
 
 /* QUICK CITY BUTTONS */
 document.querySelectorAll(".location-btn").forEach(btn => {
@@ -88,7 +89,6 @@ async function renderWeather(current, forecast) {
     const sunsetTime = new Date(current.sys.sunset * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
     const hourly = forecast.list.slice(0, 8);
-
     const daily = {};
     forecast.list.forEach(item => {
         const date = item.dt_txt.split(" ")[0];
@@ -105,6 +105,9 @@ async function renderWeather(current, forecast) {
     if (currentWeather === "Clear") advice = "Wear sunglasses 😎";
     if (currentWeather === "Clouds") advice = "Light jacket recommended";
     if (aqi >= 4) advice = "Avoid outdoor activities";
+
+    // Reset slide index on new search
+    currentSlideIndex = 0;
 
     homeSection.innerHTML = `
     <div class="current-weather">
@@ -129,47 +132,44 @@ async function renderWeather(current, forecast) {
     </div>
 
     <div class="swipe-container">
-    <div class="swipe-slider" id="slider">
-        <div class="swipe-slide">
-            <h3>Hourly Forecast</h3>
-            <div class="hourly-cards">
-                ${hourly.map(h => {
-                    const time = h.dt_txt.split(" ")[1].slice(0,5);
-                    const temp = h.main.temp.toFixed(1);
-                    const main = h.weather[0].main;
-                    return `<div class="hour-card"><p>${time}</p><p>${weatherIcons[main]}</p><p>${temp}°C</p></div>`;
-                }).join("")}
+        <div class="swipe-slider" id="slider">
+            <div class="swipe-slide">
+                <h3>Hourly Forecast</h3>
+                <div class="hourly-cards">
+                    ${hourly.map(h => {
+                        const time = h.dt_txt.split(" ")[1].slice(0,5);
+                        return `<div class="hour-card"><p>${time}</p><p>${weatherIcons[h.weather[0].main] || "🌡️"}</p><p>${h.main.temp.toFixed(1)}°C</p></div>`;
+                    }).join("")}
+                </div>
+            </div>
+            <div class="swipe-slide">
+                <h3>Tomorrow</h3>
+                <div class="tomorrow-box">
+                    ${daily[tomorrow].map(t => {
+                        const time = t.dt_txt.split(" ")[1].slice(0,5);
+                        return `<p>${time} ${weatherIcons[t.weather[0].main] || "🌡️"} ${t.main.temp.toFixed(1)}°C</p>`;
+                    }).join("")}
+                </div>
+            </div>
+            <div class="swipe-slide">
+                <h3>5 Day Forecast</h3>
+                <div class="forecast-cards">
+                    ${fiveDays.map(day => {
+                        const avg = (daily[day].reduce((s,d)=>s+d.main.temp,0)/daily[day].length).toFixed(1);
+                        const main = daily[day][0].weather[0].main;
+                        const name = new Date(day).toLocaleDateString("en-US",{weekday:"short"});
+                        return `<div class="forecast-card"><p>${name}</p><p>${weatherIcons[main] || "🌡️"}</p><p>${avg}°C</p></div>`;
+                    }).join("")}
+                </div>
             </div>
         </div>
-        <div class="swipe-slide">
-            <h3>Tomorrow</h3>
-            <div class="tomorrow-box">
-                ${daily[tomorrow].map(t => {
-                    const time = t.dt_txt.split(" ")[1].slice(0,5);
-                    const temp = t.main.temp.toFixed(1);
-                    const main = t.weather[0].main;
-                    return `<p>${time} ${weatherIcons[main]} ${temp}°C</p>`;
-                }).join("")}
-            </div>
+        <div class="slider-dots" id="sliderDots">
+            <span class="dot active" onclick="goToSlide(0)"></span>
+            <span class="dot" onclick="goToSlide(1)"></span>
+            <span class="dot" onclick="goToSlide(2)"></span>
         </div>
-        <div class="swipe-slide">
-            <h3>5 Day Forecast</h3>
-            <div class="forecast-cards">
-                ${fiveDays.map(day => {
-                    const avg = (daily[day].reduce((s,d)=>s+d.main.temp,0)/daily[day].length).toFixed(1);
-                    const main = daily[day][0].weather[0].main;
-                    const name = new Date(day).toLocaleDateString("en-US",{weekday:"short"});
-                    return `<div class="forecast-card"><p>${name}</p><p>${weatherIcons[main]}</p><p>${avg}°C</p></div>`;
-                }).join("")}
-            </div>
-        </div>
-    </div>
-    <div class="slider-dots" id="sliderDots">
-        <span class="dot active" onclick="goToSlide(0)"></span>
-        <span class="dot" onclick="goToSlide(1)"></span>
-        <span class="dot" onclick="goToSlide(2)"></span>
-    </div>
-</div>
+    </div>`;
+
     runAnimation(currentWeather);
     initSwipe();
 }
@@ -177,8 +177,8 @@ async function renderWeather(current, forecast) {
 /* WEATHER ANIMATION */
 function runAnimation(type) {
     const box = document.getElementById("weatherAnimation");
+    if(!box) return;
     box.innerHTML = "";
-
     for(let i=0;i<6;i++){
         const cloud = document.createElement("div");
         cloud.className = "cloud";
@@ -186,7 +186,6 @@ function runAnimation(type) {
         cloud.style.animationDuration = (20+Math.random()*20)+"s";
         box.appendChild(cloud);
     }
-
     if(type==="Rain" || type==="Drizzle"){
         for(let i=0;i<120;i++){
             const drop = document.createElement("div");
@@ -196,7 +195,6 @@ function runAnimation(type) {
             box.appendChild(drop);
         }
     }
-
     if(type==="Clear"){
         const sun = document.createElement("div");
         sun.className="sun";
@@ -207,23 +205,19 @@ function runAnimation(type) {
     }
 }
 
-/* SWIPE SLIDER */
-let currentSlideIndex = 0;
-
+/* SWIPE LOGIC */
 function updateDots() {
     const dots = document.querySelectorAll('.dot');
-    if(dots.length) {
-        dots.forEach((dot, i) => dot.classList.toggle('active', i === currentSlideIndex));
-    }
+    dots.forEach((dot, i) => dot.classList.toggle('active', i === currentSlideIndex));
 }
 
-function goToSlide(index) {
+window.goToSlide = function(index) {
     const slider = document.getElementById("slider");
     if (!slider) return;
     currentSlideIndex = index;
     slider.style.transform = `translateX(-${index * 100}%)`;
     updateDots();
-}
+};
 
 function initSwipe(){
     const slider = document.getElementById("slider");
@@ -232,11 +226,9 @@ function initSwipe(){
     let startX = 0;
     let isDragging = false;
 
-    // Mobile Touch
     slider.addEventListener("touchstart", e => startX = e.touches[0].clientX);
     slider.addEventListener("touchend", e => handleSwipe(startX - e.changedTouches[0].clientX));
 
-    // Laptop Mouse
     slider.addEventListener("mousedown", e => { 
         startX = e.clientX; 
         isDragging = true; 
@@ -253,66 +245,49 @@ function initSwipe(){
     function handleSwipe(diff) {
         if (diff > 50 && currentSlideIndex < 2) currentSlideIndex++;
         else if (diff < -50 && currentSlideIndex > 0) currentSlideIndex--;
-        goToSlide(currentSlideIndex);
+        window.goToSlide(currentSlideIndex);
     }
-    
     updateDots();
 }
 
-/* SEARCH BUTTON */
-searchBtn.addEventListener("click",()=>{
+/* SEARCH & THEME */
+searchBtn.addEventListener("click", () => {
     const city = searchInput.value.trim();
     if(city) getWeather(city);
 });
-searchInput.addEventListener("keypress", e=>{
-    if(e.key==="Enter") searchBtn.click();
-});
 
-/* DARK MODE */
-themeToggle.addEventListener("click",()=>{
+themeToggle.addEventListener("click", () => {
     document.body.classList.toggle("dark-mode");
 });
 
-/* AUTO LOCATION WITH DELHI DEFAULT */
-window.addEventListener("load",()=>{
-    getWeather("Delhi"); // Default
+window.addEventListener("load", () => {
+    getWeather("Delhi");
     if(navigator.geolocation){
         navigator.geolocation.getCurrentPosition(
-            pos => getWeatherByLocation(pos.coords.latitude, pos.coords.longitude),
-            err => console.warn("Geolocation failed:", err)
+            pos => getWeatherByLocation(pos.coords.latitude, pos.coords.longitude)
         );
     }
 });
 
-/* AI RULE-BASED LOGIC */
-function fillQuestion(q){ aiInput.value = q; askAI(); }
+/* AI LOGIC */
+window.fillQuestion = function(q) { aiInput.value = q; askAI(); };
 
-function askAI(){
-    if(currentWeather === "" || currentTemp === 0){
-        aiOutput.innerText = "Weather data loading… please wait a second.";
-        return;
-    }
-
+window.askAI = function() {
+    if(!currentWeather) { aiOutput.innerText = "Load weather first."; return; }
     const q = aiInput.value.toLowerCase();
-    let ans = "Ask something about temperature, wear, crop or disease.";
-
+    let ans = "Ask about temperature, wear, crop or disease.";
     if(q.includes("temperature")) ans = `Current temperature is ${currentTemp.toFixed(1)}°C`;
     else if(q.includes("wear")){
-        if(currentWeather==="Rain") ans="It is raining. Wear waterproof shoes and carry an umbrella ☔";
-        else if(currentTemp>32) ans="Weather is hot. Wear light cotton clothes ☀️";
-        else if(currentTemp<15) ans="Weather is cold. Wear a warm jacket 🧥";
+        if(currentWeather==="Rain") ans="Carry an umbrella ☔";
+        else if(currentTemp>32) ans="Wear light cotton clothes ☀️";
+        else if(currentTemp<15) ans="Wear a warm jacket 🧥";
         else ans="Comfortable casual clothes are suitable.";
     }
     else if(q.includes("crop")){
-        if(currentWeather==="Rain") ans="Rainy weather supports rice and sugarcane 🌾";
-        else if(currentTemp>30) ans="Warm weather is good for maize and cotton 🌽";
-        else ans="Wheat grows well in this climate.";
+        ans = currentWeather==="Rain" ? "Rice and sugarcane 🌾" : "Wheat or maize.";
     }
     else if(q.includes("disease")){
-        if(currentWeather==="Rain") ans="Mosquito diseases like dengue may increase 🦟";
-        else if(currentTemp>35) ans="Risk of heatstroke and dehydration.";
-        else ans="Normal seasonal infections may occur.";
+        ans = currentWeather==="Rain" ? "Risk of mosquito diseases like dengue 🦟" : "Normal risk.";
     }
-
     aiOutput.innerText = ans;
-}
+};
