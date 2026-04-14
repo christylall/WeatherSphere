@@ -1,4 +1,4 @@
-/* --- ⚙️ CONFIG & STATE --- */
+m/* --- ⚙️ CONFIG & STATE --- */
 const API_KEY = "da287b27ab2c62083846949656a915d4";
 
 const homeSection = document.getElementById("homeSection");
