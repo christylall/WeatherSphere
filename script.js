@@ -28,17 +28,12 @@ const weatherIcons = {
     Drizzle:"🌦️"
 };
 
-/* SEARCH CLICK */
+/* SEARCH */
 searchBtn.onclick = () => {
     if(searchInput.value.trim()) {
         getWeather(searchInput.value.trim());
     }
 };
-
-/* ENTER KEY SUPPORT */
-searchInput.addEventListener("keypress", e => {
-    if(e.key === "Enter") searchBtn.click();
-});
 
 /* WEATHER FETCH */
 async function getWeather(city){
@@ -61,36 +56,74 @@ async function getWeather(city){
         renderWeather(current, forecast);
 
     } catch {
-        homeSection.innerHTML = "Error fetching data ⚠️";
+        homeSection.innerHTML = "Error ⚠️";
+    }
+}
+
+/* AQI */
+async function getAQI(lat, lon){
+    try{
+        const res = await fetch(
+            `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`
+        );
+        const data = await res.json();
+        return data.list[0].main.aqi;
+    } catch {
+        return "--";
     }
 }
 
 /* RENDER */
-function renderWeather(current, forecast){
+async function renderWeather(current, forecast){
 
     currentWeather = current.weather[0].main;
     currentTemp = current.main.temp;
 
     const icon = weatherIcons[currentWeather] || "🌡️";
 
+    const aqi = await getAQI(current.coord.lat, current.coord.lon);
+
+    let aqiText = "Good 😊", aqiColor = "#2ecc71";
+    if(aqi == 2){ aqiText="Fair 🙂"; aqiColor="#f1c40f"; }
+    if(aqi == 3){ aqiText="Moderate 😐"; aqiColor="#e67e22"; }
+    if(aqi >= 4){ aqiText="Poor 😷"; aqiColor="#e74c3c"; }
+
+    /* EXTRA INFO */
+    const sunrise = new Date(current.sys.sunrise*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+    const sunset = new Date(current.sys.sunset*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+
     const hourly = forecast.list.slice(0,8);
 
     const daily = {};
     forecast.list.forEach(i=>{
         const d = i.dt_txt.split(" ")[0];
-        if(!daily[d]) daily[d] = [];
+        if(!daily[d]) daily[d]=[];
         daily[d].push(i);
     });
 
     const days = Object.keys(daily);
 
     homeSection.innerHTML = `
+    
     <div class="current-weather">
         <h2>📍 ${current.name}</h2>
         <h1>${currentTemp.toFixed(1)}°C</h1>
         <p>${icon} ${current.weather[0].description}</p>
+
+        <div class="extra-info">
+            <p>💧 ${current.main.humidity}%</p>
+            <p>💨 ${current.wind.speed} m/s</p>
+            <p>🌅 ${sunrise}</p>
+            <p>🌇 ${sunset}</p>
+        </div>
     </div>
 
+    <!-- AQI CARD (RESTORED) -->
+    <div class="aqi-card" style="background:${aqiColor}">
+        🌫️ AQI ${aqi} - ${aqiText}
+    </div>
+
+    <!-- SWIPE -->
     <div class="swipe-container">
         <div class="swipe-slider" id="slider">
 
@@ -120,25 +153,23 @@ function renderWeather(current, forecast){
     `;
 
     index = 0;
-    updateDots(0);
     initSwipe();
     runAnimation(currentWeather);
 }
 
-/* SWIPE FIX */
+/* SWIPE FIX (STABLE) */
 function initSwipe(){
     const slider = document.getElementById("slider");
     if(!slider) return;
 
     let startX = 0;
 
-    const move = (diff)=>{
+    function move(diff){
         if(diff > 50 && index < 2) index++;
         if(diff < -50 && index > 0) index--;
 
         slider.style.transform = `translateX(-${index*100}%)`;
-        updateDots(index);
-    };
+    }
 
     slider.ontouchstart = e => startX = e.touches[0].clientX;
     slider.ontouchend = e => move(startX - e.changedTouches[0].clientX);
@@ -147,21 +178,7 @@ function initSwipe(){
     slider.onmouseup = e => move(startX - e.clientX);
 }
 
-/* DOTS FIX */
-function goSlide(i){
-    index = i;
-    document.getElementById("slider").style.transform =
-        `translateX(-${index*100}%)`;
-    updateDots(i);
-}
-
-function updateDots(i){
-    document.querySelectorAll(".dot").forEach((d,idx)=>{
-        d.classList.toggle("active", idx === i);
-    });
-}
-
-/* AI FIX (MAIN ISSUE WAS HERE) */
+/* AI FIX */
 function fillQuestion(q){
     aiInput.value = q;
     askAI();
@@ -169,12 +186,12 @@ function fillQuestion(q){
 
 function askAI(){
 
-    const q = aiInput.value.toLowerCase();
-
-    if(!currentWeather){
-        aiOutput.innerText = "⚠️ Pehle weather search karo";
+    if(!currentTemp){
+        aiOutput.innerText = "⚠️ पहले weather search करो";
         return;
     }
+
+    const q = aiInput.value.toLowerCase();
 
     if(q.includes("temp")){
         aiOutput.innerText = `${currentTemp}°C`;
@@ -193,20 +210,43 @@ function askAI(){
     }
 }
 
-/* THEME FIX */
+/* THEME */
 themeToggle.onclick = ()=>{
     document.body.classList.toggle("dark-mode");
 };
 
-/* DEFAULT LOAD */
-window.onload = ()=>getWeather("Delhi");
-
-/* ANIMATION SAFE */
+/* ANIMATION RESTORED */
 function runAnimation(type){
     const box = document.getElementById("weatherAnimation");
     if(!box) return;
 
     box.innerHTML = "";
+
+    for(let i=0;i<5;i++){
+        const c = document.createElement("div");
+        c.className = "cloud";
+        c.style.top = (10+i*15)+"%";
+        box.appendChild(c);
+    }
+
+    if(type === "Rain"){
+        for(let i=0;i<60;i++){
+            const r = document.createElement("div");
+            r.className = "rain-drop";
+            r.style.left = Math.random()*100+"%";
+            box.appendChild(r);
+        }
+    }
+
+    if(type === "Snow"){
+        for(let i=0;i<40;i++){
+            const s = document.createElement("div");
+            s.className = "snowflake";
+            s.innerText = "❄️";
+            s.style.left = Math.random()*100+"%";
+            box.appendChild(s);
+        }
+    }
 
     if(type === "Clear"){
         const sun = document.createElement("div");
@@ -214,3 +254,6 @@ function runAnimation(type){
         box.appendChild(sun);
     }
 }
+
+/* DEFAULT */
+window.onload = ()=>getWeather("Delhi");
