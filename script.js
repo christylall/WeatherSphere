@@ -16,11 +16,12 @@ const weatherIcons = {
     Thunderstorm: "⚡", Mist: "🌫️", Haze: "🌫️", Drizzle: "🌦️"
 };
 
-// Quick location buttons setup
+/* --- QUICK CITY BUTTONS --- */
 document.querySelectorAll(".location-btn").forEach(btn => {
     btn.addEventListener("click", () => getWeather(btn.dataset.location));
 });
 
+/* --- AQI FETCH --- */
 async function getAQI(lat, lon) {
     try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
@@ -29,8 +30,9 @@ async function getAQI(lat, lon) {
     } catch { return "--"; }
 }
 
+/* --- GET WEATHER --- */
 async function getWeather(city) {
-    homeSection.innerHTML = "<p class='loading-text'>Loading weather...</p>";
+    homeSection.innerHTML = "<p class='loading-text'>Fetching Weather Data...</p>";
     try {
         const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
         const current = await currentRes.json();
@@ -38,7 +40,7 @@ async function getWeather(city) {
         const forecast = await forecastRes.json();
         renderWeather(current, forecast);
     } catch (err) {
-        homeSection.innerHTML = "<p>Error fetching weather. Please check city name.</p>";
+        homeSection.innerHTML = "<p>City not found. Try again!</p>";
     }
 }
 
@@ -52,15 +54,13 @@ async function getWeatherByLocation(lat, lon) {
     } catch (err) { console.error(err); }
 }
 
+/* --- RENDER EVERYTHING --- */
 async function renderWeather(current, forecast) {
     currentWeather = current.weather[0].main;
     currentTemp = current.main.temp;
     const aqi = await getAQI(current.coord.lat, current.coord.lon);
-    
-    // Slide index reset for new search
     currentSlideIndex = 0;
 
-    // Fixed Grouping logic
     const dailyData = {};
     forecast.list.forEach(item => {
         const date = item.dt_txt.split(" ")[0];
@@ -69,7 +69,7 @@ async function renderWeather(current, forecast) {
     });
 
     const dayKeys = Object.keys(dailyData);
-    const fiveDayList = dayKeys.slice(1, 6); // Tomorrow to next 5 days
+    const fiveDayList = dayKeys.slice(1, 6);
 
     homeSection.innerHTML = `
     <div class="current-weather">
@@ -78,8 +78,8 @@ async function renderWeather(current, forecast) {
         <p>${weatherIcons[currentWeather] || "🌡️"} ${current.weather[0].description}</p>
     </div>
 
-    <div class="aqi-card"><h3>AQI Index: ${aqi}</h3></div>
-    <div class="prevention-card"><h3>Health Advice: ${currentWeather === 'Rain' ? 'Carry an umbrella' : 'Perfect weather to go out'}</h3></div>
+    <div class="aqi-card"><h3>Air Quality: ${aqi}</h3></div>
+    <div class="prevention-card"><h3>Health Advice: ${currentWeather === 'Rain' ? 'Carry Umbrella' : 'Stay Hydrated'}</h3></div>
 
     <div class="swipe-container">
         <div class="swipe-slider" id="slider">
@@ -99,124 +99,103 @@ async function renderWeather(current, forecast) {
                 <h3>Tomorrow</h3>
                 <div class="tomorrow-box">
                     ${dailyData[dayKeys[1]] ? dailyData[dayKeys[1]].slice(0, 5).map(t => `
-                        <p>${t.dt_txt.split(" ")[1].slice(0,5)} - ${weatherIcons[t.weather[0].main]} ${t.main.temp.toFixed(1)}°C</p>
-                    `).join("") : "Data loading..."}
+                        <p>${t.dt_txt.split(" ")[1].slice(0,5)} - ${t.main.temp.toFixed(1)}°C</p>
+                    `).join("") : "No data"}
                 </div>
             </div>
             <div class="swipe-slide">
                 <h3>5-Day Forecast</h3>
                 <div class="forecast-cards">
                     ${fiveDayList.map(day => {
-                        const dayInfo = dailyData[day][0];
-                        const temp = dayInfo.main.temp.toFixed(1);
-                        const icon = weatherIcons[dayInfo.weather[0].main] || "🌡️";
-                        const name = new Date(day).toLocaleDateString("en-US", {weekday: "short"});
-                        return `
-                            <div class="forecast-card">
-                                <p><b>${name}</b></p>
-                                <p style="font-size: 1.5rem; margin: 5px 0;">${icon}</p>
-                                <p>${temp}°C</p>
-                            </div>
-                        `;
+                        const info = dailyData[day][0];
+                        return `<div class="forecast-card">
+                            <p><b>${new Date(day).toLocaleDateString("en-US", {weekday: "short"})}</b></p>
+                            <p style="font-size:1.5rem">${weatherIcons[info.weather[0].main] || "🌡️"}</p>
+                            <p>${info.main.temp.toFixed(1)}°C</p>
+                        </div>`;
                     }).join("")}
                 </div>
             </div>
         </div>
-        <div class="slider-dots" id="sliderDots" style="text-align:center;">
+        <div class="slider-dots">
             <span class="dot active" onclick="goToSlide(0)"></span>
             <span class="dot" onclick="goToSlide(1)"></span>
             <span class="dot" onclick="goToSlide(2)"></span>
         </div>
     </div>`;
     
-    // Animation trigger
-    if(window.runAnimation) runAnimation(currentWeather);
+    runAnimation(currentWeather);
     initSwipe();
 }
 
-// Fixed Global functions for dots
+/* --- SWIPE & DOTS LOGIC --- */
 window.goToSlide = function(index) {
     const slider = document.getElementById("slider");
     if (!slider) return;
     currentSlideIndex = index;
     slider.style.transform = `translateX(-${index * 100}%)`;
-    
-    // Update dots
-    const dots = document.querySelectorAll('.dot');
-    dots.forEach((d, i) => d.classList.toggle('active', i === index));
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === index));
 };
 
 function initSwipe(){
     const slider = document.getElementById("slider");
     if(!slider) return;
     let startX = 0, isDragging = false;
-
     slider.addEventListener("touchstart", e => startX = e.touches[0].clientX);
-    slider.addEventListener("touchend", e => handleSwipe(startX - e.changedTouches[0].clientX));
-    
-    slider.addEventListener("mousedown", e => { 
-        startX = e.clientX; 
-        isDragging = true; 
-        slider.style.cursor = "grabbing";
+    slider.addEventListener("touchend", e => {
+        let diff = startX - e.changedTouches[0].clientX;
+        if(Math.abs(diff) > 50) {
+            if (diff > 0 && currentSlideIndex < 2) currentSlideIndex++;
+            else if (diff < 0 && currentSlideIndex > 0) currentSlideIndex--;
+            window.goToSlide(currentSlideIndex);
+        }
     });
-    
+    slider.addEventListener("mousedown", e => { startX = e.clientX; isDragging = true; slider.style.cursor = "grabbing"; });
     window.addEventListener("mouseup", e => {
         if (!isDragging) return;
-        handleSwipe(startX - e.clientX);
+        let diff = startX - e.clientX;
+        if(Math.abs(diff) > 50) {
+            if (diff > 0 && currentSlideIndex < 2) currentSlideIndex++;
+            else if (diff < 0 && currentSlideIndex > 0) currentSlideIndex--;
+        }
+        window.goToSlide(currentSlideIndex);
         isDragging = false;
         slider.style.cursor = "grab";
     });
-
-    function handleSwipe(diff) {
-        if (Math.abs(diff) < 50) return; // Ignore small movements
-        if (diff > 50 && currentSlideIndex < 2) currentSlideIndex++;
-        else if (diff < -50 && currentSlideIndex > 0) currentSlideIndex--;
-        window.goToSlide(currentSlideIndex);
-    }
 }
 
-// Search function fix
-searchBtn.addEventListener("click", () => {
-    const city = searchInput.value.trim();
-    if(city) getWeather(city);
+/* --- AI LOGIC (FIXED) --- */
+window.fillQuestion = function(q) {
+    aiInput.value = q;
+    window.askAI();
+};
+
+window.askAI = function() {
+    if(!currentWeather) { aiOutput.innerText = "Please search for a city first."; return; }
+    const q = aiInput.value.toLowerCase();
+    let ans = "Ask about temperature, wear, crop, or disease.";
+    if(q.includes("temperature")) ans = `Current temp is ${currentTemp.toFixed(1)}°C.`;
+    else if(q.includes("wear")) ans = currentWeather === "Rain" ? "Wear a raincoat ☔" : "Wear comfortable clothes.";
+    else if(q.includes("crop")) ans = "Rice is good for rain, Wheat for winter.";
+    else if(q.includes("disease")) ans = "Risk of flu or seasonal infections.";
+    aiOutput.innerText = ans;
+};
+
+/* --- THEME & INITIAL LOAD --- */
+themeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark-mode");
 });
 
-// Weather background animation logic (from your previous code)
+searchBtn.addEventListener("click", () => {
+    if(searchInput.value.trim()) getWeather(searchInput.value.trim());
+});
+
 function runAnimation(type) {
     const box = document.getElementById("weatherAnimation");
     if(!box) return;
     box.innerHTML = "";
-    // Clouds
-    for(let i=0;i<6;i++){
-        const cloud = document.createElement("div");
-        cloud.className = "cloud";
-        cloud.style.top = (10+i*10)+"%";
-        cloud.style.animationDuration = (20+Math.random()*20)+"s";
-        box.appendChild(cloud);
-    }
-    // Rain
-    if(type==="Rain" || type==="Drizzle"){
-        for(let i=0;i<100;i++){
-            const drop = document.createElement("div");
-            drop.className="rain-drop";
-            drop.style.left = Math.random()*100+"%";
-            drop.style.animationDuration = (0.5+Math.random())+"s";
-            box.appendChild(drop);
-        }
-    }
-    // Sun
-    if(type==="Clear"){
-        const sun = document.createElement("div");
-        sun.className="sun";
-        box.appendChild(sun);
-    }
+    if(type === "Clear") box.innerHTML = "<div class='sun'></div>";
 }
-
-// Dark Mode Toggle
-themeToggle.addEventListener("click", () => {
-    document.body.classList.toggle("dark-mode");
-    themeToggle.innerText = document.body.classList.contains("dark-mode") ? "☀️ Day Theme" : "🌙 Night Theme";
-});
 
 window.addEventListener("load", () => {
     getWeather("Delhi");
