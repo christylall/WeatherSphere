@@ -10,7 +10,7 @@ const aiOutput = document.getElementById("aiOutput");
 let currentWeather = "";
 let currentTemp = 0;
 
-/* CITY BUTTONS */
+/* QUICK CITY BUTTONS */
 document.querySelectorAll(".location-btn").forEach(btn => {
     btn.addEventListener("click", () => {
         getWeather(btn.dataset.location);
@@ -43,11 +43,9 @@ async function getAQI(lat, lon) {
 /* CITY WEATHER */
 async function getWeather(city) {
     homeSection.innerHTML = "<p>Loading weather...</p>";
-
     try {
         const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
         const current = await currentRes.json();
-
         if (current.cod !== 200) {
             homeSection.innerHTML = "<p>City not found</p>";
             return;
@@ -55,10 +53,9 @@ async function getWeather(city) {
 
         const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`);
         const forecast = await forecastRes.json();
-
         renderWeather(current, forecast);
     } catch (err) {
-        console.error(err);
+        console.error("Weather API Error:", err);
         homeSection.innerHTML = "<p>Weather API Error</p>";
     }
 }
@@ -68,29 +65,27 @@ async function getWeatherByLocation(lat, lon) {
     try {
         const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
         const current = await currentRes.json();
-
         const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
         const forecast = await forecastRes.json();
-
         renderWeather(current, forecast);
     } catch (err) {
-        console.error(err);
-        homeSection.innerHTML = "<p>Location Error</p>";
+        console.error("Location weather fetch failed:", err);
+        homeSection.innerHTML = "<p>Location weather fetch failed</p>";
     }
 }
 
 /* RENDER WEATHER */
 async function renderWeather(current, forecast) {
-
     currentWeather = current.weather[0].main;
     currentTemp = current.main.temp;
 
     const icon = weatherIcons[currentWeather] || "🌡️";
+    const lat = current.coord.lat;
+    const lon = current.coord.lon;
+    const aqi = await getAQI(lat, lon);
 
-    const aqi = await getAQI(current.coord.lat, current.coord.lon);
-
-    const sunrise = new Date(current.sys.sunrise * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    const sunset = new Date(current.sys.sunset * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const sunriseTime = new Date(current.sys.sunrise * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const sunsetTime = new Date(current.sys.sunset * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
     const hourly = forecast.list.slice(0, 8);
 
@@ -102,14 +97,8 @@ async function renderWeather(current, forecast) {
     });
 
     const days = Object.keys(daily);
-
-    if (days.length < 2) {
-        homeSection.innerHTML = "<p>Forecast data not available</p>";
-        return;
-    }
-
     const tomorrow = days[1];
-    const fiveDays = days.slice(1, 6).filter(d => daily[d]);
+    const fiveDays = days.slice(1, 6);
 
     let advice = "Stay hydrated";
     if (currentWeather === "Rain") advice = "Carry umbrella ☔";
@@ -122,11 +111,11 @@ async function renderWeather(current, forecast) {
         <h2>${current.name}, ${current.sys.country}</h2>
         <h1>${currentTemp.toFixed(1)}°C</h1>
         <p>${icon} ${current.weather[0].description}</p>
-        <p>Feels like ${current.main.feels_like.toFixed(1)}°C</p>
+        <p>Feels Like ${current.main.feels_like.toFixed(1)}°C</p>
         <p>Humidity ${current.main.humidity}%</p>
         <p>Wind ${current.wind.speed} m/s</p>
-        <p>🌄 Sunrise ${sunrise}</p>
-        <p>🌇 Sunset ${sunset}</p>
+        <p>🌄Sunrise ${sunriseTime}</p>
+        <p>🌇Sunset ${sunsetTime}</p>
     </div>
 
     <div class="aqi-card">
@@ -140,212 +129,190 @@ async function renderWeather(current, forecast) {
     </div>
 
     <div class="swipe-container">
-        <div class="swipe-slider" id="slider">
-
-            <div class="swipe-slide">
-                <h3>Hourly Forecast</h3>
-                <div class="hourly-cards">
-                    ${hourly.map(h => `
-                        <div class="hour-card">
-                            <p>${h.dt_txt.split(" ")[1].slice(0,5)}</p>
-                            <p>${weatherIcons[h.weather[0].main]}</p>
-                            <p>${h.main.temp.toFixed(1)}°C</p>
-                        </div>
-                    `).join("")}
-                </div>
+    <div class="swipe-slider" id="slider">
+        <div class="swipe-slide">
+            <h3>Hourly Forecast</h3>
+            <div class="hourly-cards">
+                ${hourly.map(h => {
+                    const time = h.dt_txt.split(" ")[1].slice(0,5);
+                    const temp = h.main.temp.toFixed(1);
+                    const main = h.weather[0].main;
+                    return `<div class="hour-card"><p>${time}</p><p>${weatherIcons[main]}</p><p>${temp}°C</p></div>`;
+                }).join("")}
             </div>
-
-            <div class="swipe-slide">
-                <h3>Tomorrow</h3>
-                <div class="tomorrow-box">
-                    ${daily[tomorrow].map(t => `
-                        <p>${t.dt_txt.split(" ")[1].slice(0,5)} ${weatherIcons[t.weather[0].main]} ${t.main.temp.toFixed(1)}°C</p>
-                    `).join("")}
-                </div>
+        </div>
+        <div class="swipe-slide">
+            <h3>Tomorrow</h3>
+            <div class="tomorrow-box">
+                ${daily[tomorrow].map(t => {
+                    const time = t.dt_txt.split(" ")[1].slice(0,5);
+                    const temp = t.main.temp.toFixed(1);
+                    const main = t.weather[0].main;
+                    return `<p>${time} ${weatherIcons[main]} ${temp}°C</p>`;
+                }).join("")}
             </div>
-
-            <div class="swipe-slide">
-                <h3>5 Day Forecast</h3>
-                <div class="forecast-cards">
-                    ${fiveDays.map(day => {
-                        const avg = (daily[day].reduce((s,d)=>s+d.main.temp,0)/daily[day].length).toFixed(1);
-                        const main = daily[day][0].weather[0].main;
-                        const name = new Date(day).toLocaleDateString("en-US",{weekday:"short"});
-
-                        return `
-                        <div class="forecast-card">
-                            <p>${name}</p>
-                            <p>${weatherIcons[main]}</p>
-                            <p>${avg}°C</p>
-                        </div>`;
-                    }).join("")}
-                </div>
+        </div>
+        <div class="swipe-slide">
+            <h3>5 Day Forecast</h3>
+            <div class="forecast-cards">
+                ${fiveDays.map(day => {
+                    const avg = (daily[day].reduce((s,d)=>s+d.main.temp,0)/daily[day].length).toFixed(1);
+                    const main = daily[day][0].weather[0].main;
+                    const name = new Date(day).toLocaleDateString("en-US",{weekday:"short"});
+                    return `<div class="forecast-card"><p>${name}</p><p>${weatherIcons[main]}</p><p>${avg}°C</p></div>`;
+                }).join("")}
             </div>
-
         </div>
     </div>
-    `;
-
+    <div class="slider-dots" id="sliderDots">
+        <span class="dot active" onclick="goToSlide(0)"></span>
+        <span class="dot" onclick="goToSlide(1)"></span>
+        <span class="dot" onclick="goToSlide(2)"></span>
+    </div>
+</div>
     runAnimation(currentWeather);
-
-    if (!window.swipeInitialized) {
-        setTimeout(() => {
-            initSwipe();
-            window.swipeInitialized = true;
-        }, 50);
-    }
+    initSwipe();
 }
 
-/* ANIMATION */
+/* WEATHER ANIMATION */
 function runAnimation(type) {
     const box = document.getElementById("weatherAnimation");
     box.innerHTML = "";
 
-    for (let i = 0; i < 6; i++) {
+    for(let i=0;i<6;i++){
         const cloud = document.createElement("div");
         cloud.className = "cloud";
-        cloud.style.top = (10 + i * 10) + "%";
-        cloud.style.animationDuration = (20 + Math.random() * 20) + "s";
+        cloud.style.top = (10+i*10)+"%";
+        cloud.style.animationDuration = (20+Math.random()*20)+"s";
         box.appendChild(cloud);
     }
 
-    if (type === "Rain" || type === "Drizzle") {
-        for (let i = 0; i < 100; i++) {
+    if(type==="Rain" || type==="Drizzle"){
+        for(let i=0;i<120;i++){
             const drop = document.createElement("div");
-            drop.className = "rain-drop";
-            drop.style.left = Math.random() * 100 + "%";
-            drop.style.animationDuration = (0.5 + Math.random()) + "s";
+            drop.className="rain-drop";
+            drop.style.left = Math.random()*100+"%";
+            drop.style.animationDuration = (0.5+Math.random())+"s";
             box.appendChild(drop);
         }
     }
 
-    if (type === "Clear") {
+    if(type==="Clear"){
         const sun = document.createElement("div");
-        sun.className = "sun";
+        sun.className="sun";
         const rays = document.createElement("div");
-        rays.className = "sun-rays";
+        rays.className="sun-rays";
         box.appendChild(sun);
         box.appendChild(rays);
     }
 }
 
-/* SWIPE */
-function initSwipe() {
+/* SWIPE SLIDER */
+let currentSlideIndex = 0;
+
+function updateDots() {
+    const dots = document.querySelectorAll('.dot');
+    if(dots.length) {
+        dots.forEach((dot, i) => dot.classList.toggle('active', i === currentSlideIndex));
+    }
+}
+
+function goToSlide(index) {
     const slider = document.getElementById("slider");
     if (!slider) return;
+    currentSlideIndex = index;
+    slider.style.transform = `translateX(-${index * 100}%)`;
+    updateDots();
+}
 
-    let index = 0;
+function initSwipe(){
+    const slider = document.getElementById("slider");
+    if(!slider) return;
+
     let startX = 0;
-    let isDown = false;
+    let isDragging = false;
 
-    const total = document.querySelectorAll(".swipe-slide").length;
+    // Mobile Touch
+    slider.addEventListener("touchstart", e => startX = e.touches[0].clientX);
+    slider.addEventListener("touchend", e => handleSwipe(startX - e.changedTouches[0].clientX));
 
-    function move() {
-        slider.style.transform = `translateX(-${index * 100}%)`;
-        slider.style.transition = "transform 0.35s ease";
-    }
-
-    slider.addEventListener("touchstart", e => {
-        startX = e.touches[0].clientX;
-    });
-
-    slider.addEventListener("touchend", e => {
-        let diff = startX - e.changedTouches[0].clientX;
-
-        if (diff > 60 && index < total - 1) index++;
-        if (diff < -60 && index > 0) index--;
-
-        move();
-    });
-
-    slider.addEventListener("mousedown", e => {
-        isDown = true;
-        startX = e.clientX;
+    // Laptop Mouse
+    slider.addEventListener("mousedown", e => { 
+        startX = e.clientX; 
+        isDragging = true; 
         slider.style.cursor = "grabbing";
     });
 
-    window.addEventListener("mouseup", () => {
-        isDown = false;
+    window.addEventListener("mouseup", e => {
+        if (!isDragging) return;
+        handleSwipe(startX - e.clientX);
+        isDragging = false;
         slider.style.cursor = "grab";
     });
 
-    window.addEventListener("mousemove", e => {
-        if (!isDown) return;
-
-        let diff = startX - e.clientX;
-
-        if (diff > 80 && index < total - 1) {
-            index++;
-            startX = e.clientX;
-            move();
-        }
-
-        if (diff < -80 && index > 0) {
-            index--;
-            startX = e.clientX;
-            move();
-        }
-    });
-
-    slider.style.cursor = "grab";
+    function handleSwipe(diff) {
+        if (diff > 50 && currentSlideIndex < 2) currentSlideIndex++;
+        else if (diff < -50 && currentSlideIndex > 0) currentSlideIndex--;
+        goToSlide(currentSlideIndex);
+    }
+    
+    updateDots();
 }
 
-/* SEARCH */
-searchBtn.addEventListener("click", () => {
+/* SEARCH BUTTON */
+searchBtn.addEventListener("click",()=>{
     const city = searchInput.value.trim();
-    if (city) getWeather(city);
+    if(city) getWeather(city);
 });
-
-searchInput.addEventListener("keypress", e => {
-    if (e.key === "Enter") searchBtn.click();
+searchInput.addEventListener("keypress", e=>{
+    if(e.key==="Enter") searchBtn.click();
 });
 
 /* DARK MODE */
-themeToggle.addEventListener("click", () => {
+themeToggle.addEventListener("click",()=>{
     document.body.classList.toggle("dark-mode");
 });
 
-/* AUTO LOAD */
-window.addEventListener("load", () => {
-    getWeather("Delhi");
-
-    if (navigator.geolocation) {
+/* AUTO LOCATION WITH DELHI DEFAULT */
+window.addEventListener("load",()=>{
+    getWeather("Delhi"); // Default
+    if(navigator.geolocation){
         navigator.geolocation.getCurrentPosition(
             pos => getWeatherByLocation(pos.coords.latitude, pos.coords.longitude),
-            err => console.warn(err)
+            err => console.warn("Geolocation failed:", err)
         );
     }
 });
 
-/* AI */
-function fillQuestion(q) {
-    aiInput.value = q;
-    askAI();
-}
+/* AI RULE-BASED LOGIC */
+function fillQuestion(q){ aiInput.value = q; askAI(); }
 
-function askAI() {
-    if (!currentWeather) {
-        aiOutput.innerText = "Loading weather...";
+function askAI(){
+    if(currentWeather === "" || currentTemp === 0){
+        aiOutput.innerText = "Weather data loading… please wait a second.";
         return;
     }
 
     const q = aiInput.value.toLowerCase();
+    let ans = "Ask something about temperature, wear, crop or disease.";
 
-    if (q.includes("temperature")) {
-        aiOutput.innerText = `Current temperature is ${currentTemp.toFixed(1)}°C`;
+    if(q.includes("temperature")) ans = `Current temperature is ${currentTemp.toFixed(1)}°C`;
+    else if(q.includes("wear")){
+        if(currentWeather==="Rain") ans="It is raining. Wear waterproof shoes and carry an umbrella ☔";
+        else if(currentTemp>32) ans="Weather is hot. Wear light cotton clothes ☀️";
+        else if(currentTemp<15) ans="Weather is cold. Wear a warm jacket 🧥";
+        else ans="Comfortable casual clothes are suitable.";
     }
-    else if (q.includes("wear")) {
-        aiOutput.innerText = currentWeather === "Rain"
-            ? "Carry umbrella ☔"
-            : "Dress comfortably";
+    else if(q.includes("crop")){
+        if(currentWeather==="Rain") ans="Rainy weather supports rice and sugarcane 🌾";
+        else if(currentTemp>30) ans="Warm weather is good for maize and cotton 🌽";
+        else ans="Wheat grows well in this climate.";
     }
-    else if (q.includes("crop")) {
-        aiOutput.innerText = "Suitable crops depend on temperature & rain";
+    else if(q.includes("disease")){
+        if(currentWeather==="Rain") ans="Mosquito diseases like dengue may increase 🦟";
+        else if(currentTemp>35) ans="Risk of heatstroke and dehydration.";
+        else ans="Normal seasonal infections may occur.";
     }
-    else if (q.includes("disease")) {
-        aiOutput.innerText = "Check humidity & rain for disease risk";
-    }
-    else {
-        aiOutput.innerText = "Ask about temperature, wear, crop or disease";
-    }
+
+    aiOutput.innerText = ans;
 }
