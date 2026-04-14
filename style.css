@@ -588,3 +588,27 @@ animation:sunPulse 4s infinite;
 50%{transform:scale(1.15)}
 100%{transform:scale(1)}
 }
+/* AQI smooth color */
+.aqi-card{
+    transition: 0.5s;
+    font-weight: bold;
+}
+
+/* Background glow effect */
+#weatherAnimation{
+    filter: blur(1px);
+    opacity: 0.8;
+}
+
+/* Smooth slider desktop */
+.swipe-slider{
+    cursor: grab;
+}
+.swipe-slider:active{
+    cursor: grabbing;
+}
+
+/* Extra premium feel */
+.current-weather h1{
+    font-size: 3rem;
+}
