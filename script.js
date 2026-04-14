@@ -210,62 +210,57 @@ function initSwipe(){
     if(!slider) return;
 
     let startX = 0;
-    let currentX = 0;
-    let isDragging = false;
     let index = 0;
+    let dragging = false;
 
-    function moveSlide() {
+    function move(){
         slider.style.transform = `translateX(-${index * 100}%)`;
     }
 
-    /* ========== MOBILE SWIPE ========== */
-    slider.addEventListener("touchstart", (e) => {
+    // MOBILE
+    slider.addEventListener("touchstart", e=>{
         startX = e.touches[0].clientX;
     });
 
-    slider.addEventListener("touchend", (e) => {
-        const diff = startX - e.changedTouches[0].clientX;
+    slider.addEventListener("touchend", e=>{
+        let diff = startX - e.changedTouches[0].clientX;
 
         if(diff > 50 && index < 2) index++;
         if(diff < -50 && index > 0) index--;
 
-        moveSlide();
+        move();
     });
 
-    /* ========== LAPTOP / MOUSE DRAG ========== */
-    slider.addEventListener("mousedown", (e) => {
-        isDragging = true;
+    // LAPTOP
+    slider.addEventListener("mousedown", e=>{
+        dragging = true;
         startX = e.clientX;
-        slider.style.cursor = "grabbing";
     });
 
-    window.addEventListener("mouseup", () => {
-        if(!isDragging) return;
-        isDragging = false;
-        slider.style.cursor = "grab";
+    window.addEventListener("mouseup", ()=>{
+        dragging = false;
     });
 
-    window.addEventListener("mousemove", (e) => {
-        if(!isDragging) return;
+    window.addEventListener("mousemove", e=>{
+        if(!dragging) return;
 
-        currentX = e.clientX;
-        const diff = startX - currentX;
+        let diff = startX - e.clientX;
 
-        if(diff > 80) {
-            if(index < 2) index++;
-            startX = currentX;
-        }
-        if(diff < -80) {
-            if(index > 0) index--;
-            startX = currentX;
+        if(diff > 80 && index < 2){
+            index++;
+            startX = e.clientX;
         }
 
-        moveSlide();
-    });
+        if(diff < -80 && index > 0){
+            index--;
+            startX = e.clientX;
+        }
 
-    /* optional */
-    slider.style.cursor = "grab";
+        move();
+    });
 }
+
+ 
 
 /* SEARCH BUTTON */
 searchBtn.addEventListener("click",()=>{
