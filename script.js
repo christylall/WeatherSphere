@@ -1,4 +1,5 @@
-const API_KEY = "da287b27ab2c62083846949656a915d4";
+const API_KEY = "YOUR_API_KEY";
+
 const homeSection = document.getElementById("homeSection");
 const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("searchInput");
