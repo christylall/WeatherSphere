@@ -10,6 +10,7 @@
 
 <body>
 
+<!-- BACKGROUND ANIMATION -->
 <div id="weatherAnimation"></div>
 
 <div class="container">
@@ -19,49 +20,67 @@
 <button id="themeToggle" class="theme-toggle">🌙 Theme</button>
 </header>
 
+<!-- SEARCH -->
 <section class="search-section">
-<input type="text" id="searchInput" class="search-input" placeholder="Enter city">
+
+<input 
+type="text" 
+id="searchInput" 
+class="search-input" 
+placeholder="Enter city name 🔍"
+>
+
 <button id="searchBtn" class="search-btn">Search</button>
+
 </section>
 
+<!-- QUICK LOCATIONS -->
 <section class="location-buttons">
+
 <button class="location-btn" data-location="Delhi">Delhi</button>
 <button class="location-btn" data-location="Mumbai">Mumbai</button>
 <button class="location-btn" data-location="Kolkata">Kolkata</button>
 <button class="location-btn" data-location="Chennai">Chennai</button>
+
 </section>
 
+<!-- WEATHER OUTPUT (JS CONTROLLED) -->
 <section id="homeSection">
 <p>Search a city to see weather</p>
 </section>
 
-<!-- DOTS -->
+<!-- DOTS (SWIPE INDICATOR) -->
 <div class="dots">
 <span class="dot active" onclick="goSlide(0)"></span>
 <span class="dot" onclick="goSlide(1)"></span>
 <span class="dot" onclick="goSlide(2)"></span>
 </div>
 
+<!-- AI SECTION -->
 <section class="ai-chat">
 
-<h3>Weather AI</h3>
+<h3>🤖 Weather AI</h3>
 
 <div class="ai-box">
 
-<input id="aiInput" class="ai-input" placeholder="Ask...">
+<input id="aiInput" class="ai-input" placeholder="Ask weather question...">
+
 <button onclick="askAI()" class="ai-btn">Ask</button>
+
 <p id="aiOutput" class="ai-output"></p>
 
 </div>
 
 </section>
 
+<!-- FOOTER -->
 <footer>
 <p>WeatherSphere © 2026</p>
 </footer>
 
 </div>
 
+<!-- SCRIPT -->
 <script src="script.js"></script>
 
 </body>
