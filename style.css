@@ -137,3 +137,31 @@ animation:move 20s linear infinite;
 0%{transform:translateX(-200px)}
 100%{transform:translateX(120vw)}
 }
+.ai-image{
+  width:80px;
+  display:block;
+  margin:10px auto;
+  border-radius:10px;
+  opacity:0.9;
+}
+
+.ai-box{
+  background:#fff;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+
+.search-input:focus{
+  outline:none;
+  border:2px solid var(--primary);
+  box-shadow:0 0 10px rgba(74,144,226,0.4);
+}.cloud{
+  width:120px;
+  height:60px;
+  background:white;
+  border-radius:50px;
+  box-shadow:20px 10px 0 white, -20px 10px 0 white;
+  animation: move 25s linear infinite;
+  opacity:0.8;
+}
