@@ -22,34 +22,29 @@
 
 <!-- SEARCH -->
 <section class="search-section">
-
 <input 
 type="text" 
 id="searchInput" 
 class="search-input" 
-placeholder="Enter city name 🔍"
+placeholder="Enter city name (e.g. Delhi, Mumbai)"
 >
-
 <button id="searchBtn" class="search-btn">Search</button>
-
 </section>
 
-<!-- QUICK LOCATIONS -->
+<!-- QUICK CITIES -->
 <section class="location-buttons">
-
 <button class="location-btn" data-location="Delhi">Delhi</button>
 <button class="location-btn" data-location="Mumbai">Mumbai</button>
 <button class="location-btn" data-location="Kolkata">Kolkata</button>
 <button class="location-btn" data-location="Chennai">Chennai</button>
-
 </section>
 
-<!-- WEATHER OUTPUT (JS CONTROLLED) -->
+<!-- WEATHER OUTPUT -->
 <section id="homeSection">
 <p>Search a city to see weather</p>
 </section>
 
-<!-- DOTS (SWIPE INDICATOR) -->
+<!-- SWIPE DOTS -->
 <div class="dots">
 <span class="dot active" onclick="goSlide(0)"></span>
 <span class="dot" onclick="goSlide(1)"></span>
@@ -59,11 +54,22 @@ placeholder="Enter city name 🔍"
 <!-- AI SECTION -->
 <section class="ai-chat">
 
-<h3>🤖 Weather AI</h3>
+<h3>Weather AI</h3>
+
+<!-- AI IMAGE (ADDED) -->
+<img 
+src="https://i.ibb.co/xKgRbQxT/image.png" 
+class="ai-image" 
+alt="AI Assistant"
+/>
 
 <div class="ai-box">
 
-<input id="aiInput" class="ai-input" placeholder="Ask weather question...">
+<input 
+id="aiInput" 
+class="ai-input" 
+placeholder="Ask about temperature or weather..."
+>
 
 <button onclick="askAI()" class="ai-btn">Ask</button>
 
@@ -80,7 +86,6 @@ placeholder="Enter city name 🔍"
 
 </div>
 
-<!-- SCRIPT -->
 <script src="script.js"></script>
 
 </body>
